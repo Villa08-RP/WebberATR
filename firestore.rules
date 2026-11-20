@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// Webber ATR security rules.
+// Paste this whole file into Firebase console → Firestore Database → Rules, then Publish.
+// Change the email(s) below to match trainerEmails in config.js (lowercase).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isTrainer() {
+      return request.auth != null
+        && request.auth.token.email in ['felipevillar02@gmail.com'];
+    }
+
+    // Trainer: full access to athletes, history, templates and settings.
+    match /{document=**} {
+      allow read, write: if isTrainer();
+    }
+
+    // Athlete "today" lists. Anyone with the exact code can open one list
+    // (no browsing other athletes), and can only check off exercises,
+    // ask for the trainer, and send a pain rating.
+    match /board/{code} {
+      allow get: if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['items', 'status', 'statusAt', 'pain', 'updatedAt']);
+    }
+  }
+}

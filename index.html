@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Webber ATR">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#123d2b">
+<title>Webber ATR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--g:#123d2b;--g2:#1c5a3f;--g3:#e4ede6;--gold:#d9a92b;--gold2:#f5e6b6;--paper:#f5f2ea;--card:#fff;--ink:#15201a;--mute:#66705f;--line:#e2dccb;--red:#b23b2e;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:Barlow,system-ui,sans-serif;font-size:16px;-webkit-tap-highlight-color:transparent}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding-bottom:90px}
+#app.nopad{padding-bottom:0}
+.bar{position:sticky;top:0;z-index:5;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) 12px calc(18px + env(safe-area-inset-left))}
+html{background:var(--g)}
+.brand{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:25px;letter-spacing:.05em;display:flex;gap:7px;align-items:baseline}
+.brand .atr{color:var(--gold)}
+.bar-r{font-size:13px;opacity:.85;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+main{padding:18px 16px}
+h1{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:34px;line-height:1;margin:2px 0 6px;text-transform:uppercase}
+.sub{color:var(--mute);font-size:15px;font-weight:500}
+.sec{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:24px 2px 8px;display:flex;align-items:center;justify-content:space-between}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;border-radius:12px;font-weight:700;background:var(--g3);color:var(--g);white-space:nowrap}
+.btn.primary{background:var(--g);color:#fff}
+.btn.gold{background:var(--gold);color:#1d1606}
+.btn.danger{background:#f6e1de;color:var(--red)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line)}
+.btn.block{width:100%}
+.btn.sm{min-height:38px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn svg{width:18px;height:18px}
+.row{display:flex;align-items:center;gap:10px}
+.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.mt{margin-top:12px}
+input,textarea{font:inherit;width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;background:#fff;color:var(--ink)}
+input:focus,textarea:focus{outline:none;border-color:var(--g2)}
+label.lbl{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:14px 2px 6px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips.wrap{flex-wrap:wrap;overflow:visible}
+.chip{flex:none;min-height:38px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:600;font-size:14px;display:inline-flex;align-items:center}
+.chip.on{background:var(--g);border-color:var(--g);color:#fff}
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--g3);color:var(--g2);white-space:nowrap}
+.tag.wait{background:var(--gold);color:#1d1606}
+.tag.done{background:var(--g);color:#fff}
+.tag.mute{background:#eee9dc;color:var(--mute)}
+.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:#fff;border-top:1px solid var(--line);display:flex;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);position:relative}
+.tabs button svg{width:24px;height:24px}
+.tabs button.on{color:var(--g)}
+.tabs .badge{position:absolute;top:8px;left:calc(50% + 8px);background:var(--gold);color:#1d1606;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 5px}
+.hidden{display:none!important}
+.ex{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+.ex.done{background:#fbfaf6}
+.ex.done .exname{text-decoration:line-through;color:var(--mute)}
+.check{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--g2);display:grid;place-items:center;color:transparent}
+.check svg{width:18px;height:18px}
+.check.on{background:var(--g2);color:#fff}
+.dose{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;background:var(--gold2);color:#5b4100;padding:4px 10px;border-radius:8px;flex:none;white-space:nowrap}
+.exname{font-weight:600;font-size:17px;line-height:1.2}
+.icon-btn{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--mute);flex:none}
+.icon-btn svg{width:22px;height:22px}
+.icon-btn.vid{color:var(--g2);background:var(--g3)}
+.icon-btn.vid svg{width:18px;height:18px;fill:currentColor}
+.watch{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:14px;font-weight:700;color:var(--g2);background:var(--g3);padding:5px 10px;border-radius:8px;text-decoration:none}
+.watch svg{width:14px;height:14px;fill:currentColor}
+.sheet-wrap{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.scrim{position:absolute;inset:0;background:rgba(10,25,17,.45)}
+.sheet{position:relative;width:100%;max-width:560px;max-height:90vh;background:var(--paper);border-radius:20px 20px 0 0;display:flex;flex-direction:column;animation:up .2s ease-out}
+.sheet-head{padding:16px 18px 8px;display:flex;align-items:center;gap:10px}
+.sheet-head h2{font-family:'Barlow Condensed',sans-serif;font-weight:800;text-transform:uppercase;font-size:25px;margin:0;flex:1;line-height:1.05}
+.sheet-body{overflow-y:auto;padding:4px 18px 18px;-webkit-overflow-scrolling:touch}
+.sheet-foot{padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+@keyframes up{from{transform:translateY(30px);opacity:.5}to{transform:none;opacity:1}}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:30;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.lrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 4px;border-bottom:1px solid var(--line);min-height:54px}
+.lrow .plus{width:34px;height:34px;border-radius:50%;background:var(--g);color:#fff;display:grid;place-items:center;flex:none}
+.lrow .plus svg{width:18px;height:18px}
+.lrow.added .plus{background:var(--gold);color:#1d1606}
+.lrow .cat{font-size:12px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.wait-card{background:var(--gold);color:#1d1606;border-radius:var(--r);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.wait-card b{font-size:17px}
+.arow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--g);color:var(--gold);display:grid;place-items:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;flex:none}
+.aname{font-weight:700;font-size:17px;line-height:1.2}
+.ameta{font-size:14px;color:var(--mute);margin-top:2px}
+.prog{height:8px;background:var(--g3);border-radius:99px;overflow:hidden;margin-top:8px}
+.prog>i{display:block;height:100%;background:var(--g2);border-radius:99px;transition:width .3s}
+.code{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:46px;letter-spacing:.2em;color:var(--g);text-align:center;line-height:1}
+.hero{background:var(--g);color:#fff;margin:-18px -16px 16px;padding:22px 18px 24px}
+.hero h1{color:#fff;font-size:40px}
+.hero .sub{color:#cfe0d5}
+.hero .prog{background:rgba(255,255,255,.18);height:10px;margin-top:14px}
+.hero .prog>i{background:var(--gold)}
+.stick{position:sticky;bottom:0;padding:14px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(245,242,234,0),var(--paper) 28%)}
+.pain{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.pain button{min-height:42px;border-radius:8px;background:#fff;border:1.5px solid var(--line);font-weight:700}
+.pain button.on{background:var(--g);color:#fff;border-color:var(--g)}
+.empty{text-align:center;padding:34px 18px;color:var(--mute)}
+.empty b{display:block;color:var(--ink);font-family:'Barlow Condensed',sans-serif;font-size:23px;text-transform:uppercase;margin-bottom:6px}
+.qr{display:flex;justify-content:center;padding:16px;background:#fff;border-radius:14px;border:1px solid var(--line)}
+.qr img,.qr canvas{width:220px!important;height:220px!important}
+.hday{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.hday b{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase}
+.hlist{margin:0;padding:0;list-style:none}
+.hlist li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px dashed var(--line);font-size:15px}
+.hlist li span:last-child{color:var(--mute);font-weight:600;white-space:nowrap}
+.note{font-size:14px;color:var(--mute);margin-top:8px;font-style:italic}
+.banner{background:var(--gold2);color:#5b4100;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.toolbar{display:flex;gap:8px;overflow-x:auto;margin:14px 0 4px;scrollbar-width:none}
+.toolbar::-webkit-scrollbar{display:none}
+.toolbar .btn{flex:none}
+.big-add{margin:6px 0 4px}
+.pill-n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:var(--g)}
+.muted{color:var(--mute)}
+.small{font-size:14px}
+.center{text-align:center}
+.codein{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:38px;letter-spacing:.25em;text-align:center;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar"><div class="brand"><span>WEBBER</span><span class="atr">ATR</span></div><div class="bar-r" id="barR"></div></header>
+  <main id="view"></main>
+  <nav id="tabs" class="tabs hidden"></nav>
+</div>
+<div id="sheetWrap" class="sheet-wrap hidden"><div class="scrim" data-act="closeSheet"></div><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast"></div>
+<script src="config.js"></script>
+<script>
+"use strict";
+// Link the QR codes point to: wherever this app is hosted.
+const APP_URL = location.origin + location.pathname;
+
+/* ---------- starter content (trainer can add more) ---------- */
+const DEFAULT_LIB = {
+  "Knee": ["Quad sets","Straight leg raise","Heel slides","Short arc quads","Long arc quads","Terminal knee extension","Mini squats","Wall sits","Step-ups","Hamstring curls","Prone knee hangs","Patellar mobilizations","Single-leg balance"],
+  "Hip": ["Glute bridges","Clamshells","Side-lying hip abduction","Monster walks","Hip flexor stretch","Fire hydrants"],
+  "Ankle": ["Ankle pumps","Ankle alphabet","Towel scrunches","Band 4-way ankle","Calf raises","Calf stretch","Foam balance"],
+  "Shoulder": ["Pendulums","Band ER/IR","Scapular retraction","Wall slides","Sleeper stretch","Prone Y-T-W"],
+  "Core": ["Plank","Side plank","Dead bugs","Bird dogs","Pallof press"],
+  "Cardio & recovery": ["Stationary bike","Elliptical","Ice","Game Ready","E-stim","Heat pack","Foam roll","Stretching"]
+};
+const DOSES = ["3×10","3×15","2×20","3×20","3×30s","2×1 min","5 min","10 min","15 min","20 min"];
+const SPORTS = ["Men's Soccer","Women's Soccer","Flag Football","Football","Baseball","Softball","Men's Basketball","Women's Basketball","Volleyball","Beach Volleyball","Men's Lacrosse","Women's Lacrosse","Tennis","Golf","Track & Field","Cross Country","Bowling","Cheer","Wrestling","Esports"];
+const BUILTIN_TPL = [
+  {id:"b-knee-early",name:"Post-op knee · early",items:[["Quad sets","3×10"],["Straight leg raise","3×10"],["Heel slides","3×15"],["Patellar mobilizations","2×1 min"],["Ankle pumps","3×20"],["Game Ready","15 min"]]},
+  {id:"b-knee-strength",name:"Knee · strength phase",items:[["Stationary bike","10 min"],["Mini squats","3×15"],["Step-ups","3×10"],["Terminal knee extension","3×15"],["Single-leg balance","3×30s"],["Ice","15 min"]]},
+  {id:"b-ankle-1",name:"Ankle sprain · phase 1",items:[["Ankle alphabet","2×1 min"],["Towel scrunches","3×15"],["Band 4-way ankle","3×10"],["Calf raises","3×15"],["Ice","15 min"]]},
+  {id:"b-shoulder",name:"Shoulder · rotator cuff",items:[["Pendulums","2×1 min"],["Band ER/IR","3×15"],["Scapular retraction","3×15"],["Wall slides","3×10"],["Ice","15 min"]]}
+].map(t=>({id:t.id,name:t.name,builtin:true,items:t.items.map(([name,dose])=>({name,dose}))}));
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-3);
+const clone = o => JSON.parse(JSON.stringify(o));
+const z = n => String(n).padStart(2,"0");
+const localDate = d => d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());
+const today = () => localDate(new Date());
+function parseDate(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);}
+const fmtDate = s => parseDate(s).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+function relDay(s){ if(!s) return "No visits yet"; const diff=Math.round((parseDate(today())-parseDate(s))/864e5); if(diff===0) return "Today"; if(diff===1) return "Yesterday"; if(diff<7) return diff+" days ago"; return fmtDate(s); }
+const firstName = n => String(n||"").trim().split(/\s+/)[0] || "Athlete";
+const initials = n => String(n||"?").trim().split(/\s+/).slice(0,2).map(p=>p[0]||"").join("").toUpperCase();
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function newCode(){ const used=new Set(Object.values(S.athletes).map(a=>a.code)); let c; do{c="";for(let i=0;i<5;i++)c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)];}while(used.has(c)); return c; }
+function catOf(name){ const l=name.toLowerCase(); for(const c in DEFAULT_LIB){ if(DEFAULT_LIB[c].some(x=>x.toLowerCase()===l)) return c; } const m=(S.lib.custom||[]).find(x=>x.name.toLowerCase()===l); return m?m.cat:"Mine"; }
+const defaultDose = cat => cat==="Cardio & recovery" ? "10 min" : "3×10";
+const videoFor = name => (S.videos && S.videos[String(name||"").toLowerCase()]) || "";
+const isUrl = s => /^https?:\/\/[^\s]+\.[^\s]+/i.test(s||"");
+const linkFor = code => (APP_URL || "") + "#athlete-" + code;
+
+const P = {
+  back:"M15 18l-6-6 6-6", plus:"M12 5v14M5 12h14", check:"M5 12.5l4.5 4.5L19 7", more:"M5 12h.01M12 12h.01M19 12h.01",
+  qr:"M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 19h2M19 14h1",
+  repeat:"M17 2l4 4-4 4M3 11V9a3 3 0 013-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 01-3 3H3",
+  layers:"M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5", save:"M6 3h12v18l-6-4-6 4z", search:"M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4-4",
+  bell:"M6 9a6 6 0 1112 0c0 6 3 7 3 7H3s3-1 3-7M10 20a2 2 0 004 0", trash:"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13",
+  today:"M4 6h16v14H4zM4 10h16M9 3v4M15 3v4", users:"M9 11a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M17 11a3 3 0 100-6M22 21c0-3-2-5-5-5.5",
+  edit:"M4 20h4L19 9l-4-4L4 16z", up:"M12 19V5M6 11l6-6 6 6", down:"M12 5v14M6 13l6 6 6-6", copy:"M9 9h11v11H9zM5 15H4V4h11v1", x:"M6 6l12 12M18 6L6 18", play:"M8 5v14l11-7z", eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z"
+};
+const I = (n,w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${n==="more"?3.5:(w||2.2)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${P[n]}"/></svg>`;
+
+let toastT;
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+
+/* ---------- state ---------- */
+const S = {
+  db:null, user:null, trainer:false, canWrite:null,
+  ready:false, slow:false, loadErr:"",
+  athletes:{}, todaySessions:{}, boards:{}, lib:{custom:[]}, templates:{list:[]}, videos:{},
+  history:{}, histSubs:{}, histOrder:[],
+  route:{name:"loading"}, tab:"today", prev:null,
+  search:"", sportFilter:"", pickSearch:"",
+  edit:null, sheet:null, confirmFn:null,
+  libCat:"All", libSearch:"",
+  student:{code:null,board:null,unsub:null,loaded:false,slow:false,local:{},readonly:false,err:""}
+};
+
+/* ---------- writes: one at a time per document ---------- */
+const W = {};
+const isBusy = p => !!(W[p] && (W[p].busy || W[p].next));
+function write(path, data){
+  if(!S.db) return;
+  const body = clone(data); delete body.id;
+  const w = W[path] || (W[path] = {busy:false,next:null});
+  w.next = {op:"set", body};
+  if(!w.busy) flush(path);
+}
+function remove(path){
+  if(!S.db) return;
+  const w = W[path] || (W[path] = {busy:false,next:null});
+  w.next = {op:"delete"};
+  if(!w.busy) flush(path);
+}
+async function flush(path){
+  const w = W[path]; w.busy = true;
+  while(w.next){
+    const job = w.next; w.next = null;
+    for(let attempt=0; attempt<2; attempt++){
+      try{
+        if(job.op==="delete") await S.db.doc(path).delete(); else await S.db.doc(path).set(job.body);
+        break;
+      }catch(e){
+        const code = e && e.code;
+        if(code==="unavailable" && attempt===0){ await new Promise(r=>setTimeout(r,600+Math.random()*900)); continue; }
+        onWriteErr(code, e); break;
+      }
+    }
+  }
+  w.busy = false;
+}
+function onWriteErr(code, e){
+  if(S.route.name==="student" && (code==="invalid_argument" || code==="not_granted")){
+    if(!S.student.readonly){ S.student.readonly = true; toast("Check-offs are saved on this phone only"); rerender(); }
+    return;
+  }
+  if(code==="quota_exceeded") return toast("Storage is full: " + (e.message||"delete old records"));
+  if(code==="invalid_argument") return toast("Couldn't save. You may not have edit access.");
+  toast("Couldn't save right now. Try again in a moment.");
+}
+
+/* ---------- render (holds off while someone is typing) ---------- */
+let pending = false;
+function isTyping(){ const a=document.activeElement; return !!(a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA") && (a.closest("#view")||a.closest("#sheet"))); }
+function rerender(){ if(isTyping()){ pending=true; return; } render(); }
+document.addEventListener("focusout", ()=>setTimeout(()=>{ if(pending && !isTyping()){ pending=false; render(); } }, 260));
+
+function render(){
+  const r = S.route.name;
+  const student = r==="student" || r==="code" || r==="login";
+  $("app").classList.toggle("nopad", student || r==="session");
+  $("barR").textContent = parseDate(today()).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+  const showTabs = S.trainer && ["today","athletes","athlete"].includes(r);
+  const tabs = $("tabs"); tabs.classList.toggle("hidden", !showTabs);
+  if(showTabs) tabs.innerHTML = tabsHTML();
+  let html = "";
+  if(r==="loading") html = `<div class="empty"><b>Loading…</b>Getting the training room ready.</div>`;
+  else if(r==="nodb") html = vNoDb();
+  else if(r==="today") html = vToday();
+  else if(r==="athletes") html = vAthletes();
+  else if(r==="athlete") html = vAthlete(S.route.id);
+  else if(r==="session") html = vSession();
+  else if(r==="student") html = vStudent();
+  else if(r==="code") html = vCode();
+  else if(r==="login") html = vLogin();
+  if(S.trainer && !student && S.slow && !S.loadErr) html = `<div class="banner">Can't reach the saved data yet. What you see may be out of date.</div>` + html;
+  $("view").innerHTML = html;
+  renderSheet();
+}
+
+function tabsHTML(){
+  const waiting = waitingList().length;
+  const t = S.route.name==="today" ? "today" : "athletes";
+  return `<button data-act="tab" data-tab="today" class="${t==="today"?"on":""}">${I("today")}Today${waiting?`<span class="badge">${waiting}</span>`:""}</button>
+          <button data-act="tab" data-tab="athletes" class="${t==="athletes"?"on":""}">${I("users")}Athletes</button>`;
+}
+
+/* ---------- trainer: data ---------- */
+function startTrainerSubs(){
+  const db = S.db, td = today();
+  const t = setTimeout(()=>{ if(!S.confirmed){ S.slow=true; rerender(); } }, 10000);
+  const ok = snap => { if(!snap.metadata.fromCache){ clearTimeout(t); S.confirmed=true; if(S.slow){S.slow=false;} } };
+  const fail = e => { clearTimeout(t); S.loadErr = (e&&e.code)||"error"; S.ready=true; rerender(); };
+  db.collection("athletes").onSnapshot(snap=>{
+    ok(snap); const o={}; snap.docs.forEach(d=>{ o[d.id]={...d.data(), id:d.id}; }); S.athletes=o; S.ready=true; syncBoards(); rerender();
+  }, fail);
+  db.collection("sessions").where("date","==",td).onSnapshot(snap=>{
+    const o={}; snap.docs.forEach(d=>{ const v=d.data(); if(v && v.athleteId) o[v.athleteId]={...v, id:d.id}; });
+    S.todaySessions=o; adoptRemote(o); syncBoards(); rerender();
+  }, fail);
+  db.collection("board").onSnapshot(snap=>{
+    const o={}; snap.docs.forEach(d=>{ o[d.id]={...d.data()}; }); S.boards=o; syncBoards(); rerender();
+  }, fail);
+  db.doc("config/library").onSnapshot(d=>{ S.lib = d.exists ? {custom:[], ...d.data()} : {custom:[]}; rerender(); }, ()=>{});
+  db.doc("config/videos").onSnapshot(d=>{ S.videos = (d.exists && d.data().map) ? {...d.data().map} : {}; rerender(); }, ()=>{});
+  db.doc("config/templates").onSnapshot(d=>{ S.templates = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
+  setInterval(()=>{ if(S.route.name==="today") rerender(); }, 30000);
+}
+function ensureHistory(aid){
+  if(!S.db || S.histSubs[aid]) return;
+  S.histSubs[aid] = S.db.collection("sessions").where("athleteId","==",aid).onSnapshot(snap=>{
+    S.history[aid] = snap.docs.map(d=>({...d.data(), id:d.id})).filter(s=>s.date).sort((a,b)=>b.date.localeCompare(a.date));
+    const e = S.edit;
+    if(e && e.aid===aid && e.date!==today()){ const r=S.history[aid].find(s=>s.date===e.date); if(r) adoptOne(r); }
+    rerender();
+  }, ()=>{});
+  S.histOrder.push(aid);
+  if(S.histOrder.length > 25){ const old=S.histOrder.shift(); if(S.histSubs[old]){ S.histSubs[old](); delete S.histSubs[old]; delete S.history[old]; } }
+}
+function sessPath(aid,date){ return "sessions/"+aid+"_"+date; }
+function adoptRemote(map){ const e=S.edit; if(e && e.date===today() && map[e.aid]) adoptOne(map[e.aid]); }
+function adoptOne(remote){
+  const e=S.edit; if(!e) return;
+  if(isBusy(sessPath(e.aid,e.date))) return;
+  const a=document.activeElement; if(a && a.id==="noteIn") return;
+  e.doc = clone(remote); delete e.doc.id;
+}
+function waitingList(){
+  const td=today(); const out=[];
+  for(const aid in S.todaySessions){ const a=S.athletes[aid]; if(!a) continue; const b=S.boards[a.code]; if(b && b.date===td && b.status==="help") out.push({a,b}); }
+  return out.sort((x,y)=>(x.b.statusAt||0)-(y.b.statusAt||0));
+}
+// Copy athlete check-offs and pain rating from their board into the trainer's record.
+function syncBoards(){
+  if(!S.trainer) return; const td=today();
+  for(const aid in S.todaySessions){
+    const a=S.athletes[aid]; if(!a) continue; const b=S.boards[a.code]; if(!b || b.date!==td) continue;
+    const s=S.todaySessions[aid], path=sessPath(aid,td);
+    if(isBusy(path) || isBusy("board/"+a.code)) continue;
+    const bm={}; (b.items||[]).forEach(i=>{ bm[i.id]=!!i.done; });
+    let changed=false;
+    const items=(s.items||[]).map(i=>{ const d=(i.id in bm)?bm[i.id]:!!i.done; if(d!==!!i.done) changed=true; return {...i, done:d}; });
+    const pain = (b.pain===undefined) ? null : b.pain;
+    if((s.pain===undefined?null:s.pain)!==pain) changed=true;
+    if(changed){
+      const nd={...s, items, pain}; S.todaySessions[aid]=nd; write(path, nd);
+      const e=S.edit; if(e && e.aid===aid && e.date===td){ e.doc.items.forEach(i=>{ if(i.id in bm) i.done=bm[i.id]; }); e.doc.pain=pain; }
+    }
+  }
+}
+function pushBoard(aid, d, force){
+  const a=S.athletes[aid]; if(!a || !a.code) return;
+  const prev=S.boards[a.code]; const same=!!(prev && prev.date===d.date);
+  const items=d.items.map(i=>{ const pi=same?(prev.items||[]).find(x=>x.id===i.id):null; return {id:i.id,name:i.name,dose:i.dose||"",video:videoFor(i.name),done: force ? !!i.done : (!!i.done || !!(pi&&pi.done))}; });
+  let status = same ? (prev.status||"") : "";
+  if(status==="done" && items.some(i=>!i.done)) status="";
+  const body={first:firstName(a.name), date:d.date, items, status, statusAt: same?(prev.statusAt||0):0, pain: same?(prev.pain===undefined?null:prev.pain):null, updatedAt:Date.now()};
+  S.boards[a.code]=body; write("board/"+a.code, body);
+}
+function saveSession(force){
+  const e=S.edit; if(!e) return;
+  const d=e.doc; d.updatedAt=Date.now(); d.athleteId=e.aid; d.date=e.date;
+  write(sessPath(e.aid,e.date), d);
+  if(e.date===today()){ S.todaySessions[e.aid]={...clone(d), id:e.aid+"_"+e.date}; pushBoard(e.aid, d, force); }
+  const a=S.athletes[e.aid];
+  if(a && d.items.length && (!a.lastVisit || a.lastVisit<e.date)){ a.lastVisit=e.date; write("athletes/"+a.id, a); }
+}
+function openSession(aid, date){
+  ensureHistory(aid);
+  const td=today();
+  const existing = date===td ? S.todaySessions[aid] : (S.history[aid]||[]).find(s=>s.date===date);
+  const doc = existing ? clone(existing) : {athleteId:aid, date, items:[], note:"", pain:null, createdAt:Date.now()};
+  delete doc.id; doc.items = doc.items || [];
+  if(S.route.name!=="session") S.prev = S.route;
+  S.edit = {aid, date, doc};
+  S.route = {name:"session"};
+  if(!existing) saveSession();
+  render(); window.scrollTo(0,0);
+}
+
+/* ---------- trainer: views ---------- */
+function vNoDb(){
+  if(S.beError==="not-configured") return `<div class="empty"><b>Setup not finished</b>Add your Firebase settings to config.js (see SETUP.md).</div>`;
+  return `<div class="empty"><b>Can't connect</b>Check your internet connection and open the app again.</div>`;
+}
+function statusOf(aid){
+  const a=S.athletes[aid], s=S.todaySessions[aid], b=a&&S.boards[a.code], td=today();
+  const items=(s&&s.items)||[]; const done=items.filter(i=>i.done).length;
+  let tag=`<span class="tag mute">Not started</span>`;
+  if(b && b.date===td && b.status==="help") tag=`<span class="tag wait">Waiting</span>`;
+  else if(items.length && done===items.length) tag=`<span class="tag done">Finished</span>`;
+  else if(done>0) tag=`<span class="tag">In progress</span>`;
+  else if(!items.length) tag=`<span class="tag mute">No exercises</span>`;
+  const rank = (b&&b.date===td&&b.status==="help")?0 : (items.length&&done===items.length)?3 : done>0?1:2;
+  return {items, done, tag, rank};
+}
+function vToday(){
+  if(!S.ready) return `<div class="empty"><b>Loading…</b></div>`;
+  const ids=Object.keys(S.todaySessions).filter(id=>S.athletes[id]);
+  const waiting=waitingList();
+  const rows=ids.map(id=>({id, a:S.athletes[id], st:statusOf(id)})).sort((x,y)=>x.st.rank-y.st.rank || x.a.name.localeCompare(y.a.name));
+  let h=`<h1>Today</h1><div class="sub">${ids.length} athlete${ids.length===1?"":"s"} in the room${waiting.length?` · <b style="color:#8a6300">${waiting.length} waiting</b>`:""}</div>`;
+  if(waiting.length){
+    h+=`<div class="sec">Needs you</div>`;
+    h+=waiting.map(({a,b})=>{ const m=Math.max(0,Math.round((Date.now()-(b.statusAt||Date.now()))/60000));
+      return `<div class="wait-card"><div class="grow" data-act="openSess" data-id="${a.id}" style="cursor:pointer"><b>${esc(a.name)}</b><div class="small">${esc(a.sport||"")} · waiting ${m<1?"just now":m+" min"}</div></div><button class="btn sm primary" data-act="gotIt" data-code="${esc(a.code)}">Got it</button></div>`; }).join("");
+  }
+  h+=`<div class="sec"><span>In the room</span></div>`;
+  if(!rows.length) h+=`<div class="empty"><b>Nobody yet</b>Add an athlete when they walk in. You can repeat their last session in one tap.</div>`;
+  h+=rows.map(({id,a,st})=>{ const pct=st.items.length?Math.round(st.done/st.items.length*100):0;
+    return `<button class="arow" data-act="openSess" data-id="${id}"><div class="avatar">${esc(initials(a.name))}</div><div class="grow"><div class="row"><div class="aname grow">${esc(a.name)}</div>${st.tag}</div><div class="ameta">${esc(a.sport||"")}${a.injury?" · "+esc(a.injury):""} · ${st.done}/${st.items.length} done</div><div class="prog"><i style="width:${pct}%"></i></div></div></button>`; }).join("");
+  h+=`<button class="btn gold block mt" data-act="openPick">${I("plus")}Add athlete to today</button>`;
+  return h;
+}
+function sportsList(){ return [...new Set(Object.values(S.athletes).map(a=>a.sport).filter(Boolean))].sort(); }
+function athListHTML(){
+  const q=S.search.trim().toLowerCase();
+  let list=Object.values(S.athletes).filter(a=>(!S.sportFilter||a.sport===S.sportFilter) && (!q || (a.name+" "+(a.sport||"")+" "+(a.injury||"")).toLowerCase().includes(q)));
+  list.sort((a,b)=>a.name.localeCompare(b.name));
+  if(!Object.keys(S.athletes).length) return `<div class="empty"><b>No athletes yet</b>Add your first athlete to get started.</div>`;
+  if(!list.length) return `<div class="empty">No athletes match.</div>`;
+  return list.map(a=>`<button class="arow" data-act="openAth" data-id="${a.id}"><div class="avatar">${esc(initials(a.name))}</div><div class="grow"><div class="aname">${esc(a.name)}</div><div class="ameta">${esc(a.sport||"No sport")}${a.injury?" · "+esc(a.injury):""}</div></div><div class="small muted">${esc(relDay(a.lastVisit))}</div></button>`).join("");
+}
+function vAthletes(){
+  if(!S.ready) return `<div class="empty"><b>Loading…</b></div>`;
+  const sports=sportsList();
+  let h=`<div class="row"><h1 class="grow">Athletes</h1><button class="btn sm primary" data-act="newAth">${I("plus")}New</button></div>`;
+  h+=`<input class="mt" type="search" placeholder="Search name, sport or injury" value="${esc(S.search)}" data-in="athSearch">`;
+  if(sports.length) h+=`<div class="chips mt"><button class="chip ${!S.sportFilter?"on":""}" data-act="sportF" data-s="">All</button>${sports.map(s=>`<button class="chip ${S.sportFilter===s?"on":""}" data-act="sportF" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>`;
+  h+=`<div id="athList" class="mt">${athListHTML()}</div>`;
+  h+=`<div class="center small muted" style="margin-top:28px">Signed in as ${esc(S.authEmail||"")} · <button data-act="signOut" style="text-decoration:underline">Sign out</button></div>`;
+  return h;
+}
+function vAthlete(id){
+  const a=S.athletes[id];
+  if(!a) return S.ready ? `<div class="empty"><b>Athlete not found</b><button class="btn mt" data-act="tab" data-tab="athletes">Back to athletes</button></div>` : `<div class="empty"><b>Loading…</b></div>`;
+  ensureHistory(id);
+  const hist=S.history[id];
+  const hasToday=!!S.todaySessions[id];
+  let h=`<button class="btn sm ghost" data-act="tab" data-tab="athletes">${I("back")}Athletes</button>`;
+  h+=`<div class="row mt"><div class="avatar" style="width:56px;height:56px;font-size:22px">${esc(initials(a.name))}</div><div class="grow"><h1 style="margin:0">${esc(a.name)}</h1><div class="sub">${esc(a.sport||"No sport")}${a.injury?" · "+esc(a.injury):""}</div></div></div>`;
+  h+=`<button class="btn primary block mt" data-act="openSess" data-id="${id}">${hasToday?"Open today's session":"Start today's session"}</button>`;
+  h+=`<div class="row mt"><button class="btn grow" data-act="showQR" data-id="${id}">${I("qr")}Code ${esc(a.code)}</button><button class="btn" data-act="editAth" data-id="${id}">${I("edit")}Edit</button></div>`;
+  h+=`<div class="sec">History</div>`;
+  if(!hist) h+=`<div class="empty small">Loading history…</div>`;
+  else if(!hist.length) h+=`<div class="empty small">No sessions yet.</div>`;
+  else h+=hist.map(s=>{ const items=s.items||[]; const done=items.filter(i=>i.done).length;
+    return `<div class="card"><div class="hday"><b>${esc(s.date===today()?"Today":fmtDate(s.date))}</b><div class="row"><span class="small muted">${done}/${items.length} done${s.pain!=null&&s.pain!==""?` · pain ${esc(s.pain)}/10`:""}</span><button class="btn sm" data-act="openSess" data-id="${id}" data-date="${esc(s.date)}">Edit</button></div></div>
+      ${items.length?`<ul class="hlist">${items.map(i=>`<li><span>${i.done?"✓ ":""}${esc(i.name)}</span><span>${esc(i.dose||"")}</span></li>`).join("")}</ul>`:`<div class="small muted">No exercises</div>`}
+      ${s.note?`<div class="note">${esc(s.note)}</div>`:""}</div>`; }).join("");
+  return h;
+}
+function vSession(){
+  const e=S.edit; if(!e) return "";
+  const a=S.athletes[e.aid]||{name:"Athlete"};
+  const items=e.doc.items; const done=items.filter(i=>i.done).length;
+  const b=a.code&&S.boards[a.code]; const waiting=b&&b.date===e.date&&b.status==="help";
+  let h=`<div class="row"><button class="btn sm ghost" data-act="back">${I("back")}Back</button><div class="grow"></div>${waiting?`<button class="btn sm gold" data-act="gotIt" data-code="${esc(a.code)}">Waiting · got it</button>`:""}</div>`;
+  h+=`<div class="mt" data-act="openAth" data-id="${e.aid}" style="cursor:pointer"><h1 style="margin-bottom:2px">${esc(a.name)}</h1><div class="sub">${esc(e.date===today()?"Today, "+fmtDate(e.date):fmtDate(e.date))} · ${esc(a.sport||"")} · ${done}/${items.length} done</div></div>`;
+  h+=`<div class="toolbar"><button class="btn sm" data-act="repeatLast">${I("repeat")}Repeat last</button><button class="btn sm" data-act="openTpl">${I("layers")}Templates</button>${items.length?`<button class="btn sm" data-act="openSaveTpl">${I("save")}Save as template</button>`:""}</div>`;
+  h+=`<div class="mt">`;
+  if(!items.length) h+=`<div class="empty small" style="padding:20px">No exercises yet. Tap <b style="display:inline;font-size:inherit;font-family:inherit;text-transform:none">Add exercise</b>, or repeat last session.</div>`;
+  h+=items.map((i,idx)=>`<div class="ex ${i.done?"done":""}"><button class="check ${i.done?"on":""}" data-act="toggleItem" data-i="${esc(i.id)}" aria-label="Mark done">${I("check",3)}</button><div class="grow exname">${esc(i.name)}</div>${videoFor(i.name)?`<a class="icon-btn vid" href="${esc(videoFor(i.name))}" target="_blank" rel="noopener" aria-label="Watch video">${I("play",2)}</a>`:""}<button class="dose" data-act="openItem" data-i="${esc(i.id)}">${esc(i.dose||"set")}</button><button class="icon-btn" data-act="openItem" data-i="${esc(i.id)}" aria-label="More">${I("more")}</button></div>`).join("");
+  h+=`</div><button class="btn gold block big-add" data-act="openLib">${I("plus")}Add exercise</button>`;
+  h+=`<label class="lbl" for="noteIn">Notes</label><textarea id="noteIn" rows="3" placeholder="ROM, swelling, how it felt…" data-in="note">${esc(e.doc.note||"")}</textarea>`;
+  if(e.doc.pain!=null && e.doc.pain!=="") h+=`<div class="card mt row"><div class="grow small muted">Pain reported by athlete after session</div><div class="pill-n">${esc(e.doc.pain)}/10</div></div>`;
+  return h;
+}
+
+/* ---------- sheets ---------- */
+function openSheet(s){ S.sheet=s; renderSheet(); }
+function closeSheet(){ S.sheet=null; renderSheet(); }
+function allExercises(){
+  const out=[], seen=new Set();
+  for(const c in DEFAULT_LIB) for(const n of DEFAULT_LIB[c]){ const k=n.toLowerCase(); if(!seen.has(k)){seen.add(k); out.push({name:n,cat:c});} }
+  for(const x of (S.lib.custom||[])){ const k=String(x.name).toLowerCase(); if(!seen.has(k)){seen.add(k); out.push({name:x.name,cat:x.cat||"Mine"});} }
+  return out;
+}
+function libListHTML(){
+  const q=S.libSearch.trim().toLowerCase(); const cat=S.libCat;
+  const inSess=new Set(((S.edit&&S.edit.doc.items)||[]).map(i=>i.name.toLowerCase()));
+  let list=allExercises().filter(x=>(cat==="All"||x.cat===cat) && (!q||x.name.toLowerCase().includes(q)));
+  let h="";
+  h+=list.map(x=>{ const on=inSess.has(x.name.toLowerCase()); return `<button class="lrow ${on?"added":""}" data-act="addEx" data-name="${esc(x.name)}" data-cat="${esc(x.cat)}"><span class="plus">${I(on?"check":"plus",3)}</span><span class="grow"><span class="exname">${esc(x.name)}</span>${cat==="All"?`<div class="cat">${esc(x.cat)}</div>`:""}</span></button>`; }).join("");
+  if(q && !allExercises().some(x=>x.name.toLowerCase()===q)) h+=`<button class="lrow" data-act="newEx"><span class="plus">${I("plus")}</span><span class="grow"><b>Add “${esc(S.libSearch.trim())}”</b><div class="cat">New exercise · saved for next time</div></span></button>`;
+  if(!h) h=`<div class="empty small">Nothing found.</div>`;
+  return h;
+}
+function renderSheet(){
+  const wrap=$("sheetWrap"), el=$("sheet"), s=S.sheet;
+  if(!s){ wrap.classList.add("hidden"); el.innerHTML=""; return; }
+  const body=el.querySelector(".sheet-body"); const scroll=body?body.scrollTop:0;
+  const head=(t)=>`<div class="sheet-head"><h2>${t}</h2><button class="icon-btn" data-act="closeSheet" aria-label="Close">${I("x")}</button></div>`;
+  let h="";
+  if(s.type==="lib"){
+    const cats=["All",...Object.keys(DEFAULT_LIB)]; if((S.lib.custom||[]).length) cats.push("Mine");
+    h=head("Add exercise")+`<div style="padding:0 18px"><input type="search" placeholder="Search or type a new one" value="${esc(S.libSearch)}" data-in="libSearch"><div class="chips mt">${cats.map(c=>`<button class="chip ${S.libCat===c?"on":""}" data-act="libCat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div></div>
+      <div class="sheet-body" id="libList">${libListHTML()}</div><div class="sheet-foot"><button class="btn primary block" data-act="closeSheet">Done</button></div>`;
+  } else if(s.type==="item"){
+    const it=S.edit&&S.edit.doc.items.find(i=>i.id===s.iid); if(!it){ S.sheet=null; return renderSheet(); }
+    h=head(esc(it.name))+`<div class="sheet-body"><label class="lbl">Sets / reps / time</label><div class="chips wrap">${DOSES.map(d=>`<button class="chip ${it.dose===d?"on":""}" data-act="setDose" data-d="${esc(d)}">${esc(d)}</button>`).join("")}</div>
+      <div class="row mt"><input id="doseIn" placeholder="Custom, e.g. 3×12 @ 10 lb" value="${DOSES.includes(it.dose)?"":esc(it.dose||"")}"><button class="btn primary" data-act="customDose">Set</button></div>
+      <label class="lbl" for="vidIn">Exercise video</label>
+      ${videoFor(it.name)?`<div class="card row" style="padding:10px 12px"><a class="grow small" href="${esc(videoFor(it.name))}" target="_blank" rel="noopener" style="color:var(--g2);font-weight:700;word-break:break-all">${I("play",2).replace('<svg','<svg style="width:16px;height:16px;vertical-align:-3px;margin-right:4px"')}${esc(videoFor(it.name))}</a><button class="btn sm danger" data-act="removeVideo">Remove</button></div>`:""}
+      <div class="row"><input id="vidIn" type="url" inputmode="url" placeholder="Paste a YouTube or video link" value=""><button class="btn primary" data-act="saveVideo">${videoFor(it.name)?"Replace":"Save"}</button></div>
+      <div class="small muted" style="margin-top:6px">Saved to “${esc(it.name)}” for every athlete, so you only add it once.</div>
+      <div class="row mt"><button class="btn grow" data-act="moveItem" data-dir="-1">${I("up")}Up</button><button class="btn grow" data-act="moveItem" data-dir="1">${I("down")}Down</button><button class="btn danger grow" data-act="removeItem">${I("trash")}Remove</button></div></div>`;
+  } else if(s.type==="tpl"){
+    const list=[...BUILTIN_TPL, ...((S.templates.list)||[])];
+    h=head("Templates")+`<div class="sheet-body"><div class="small muted" style="margin-bottom:8px">Adds the exercises that aren't already on today's list.</div>${list.map(t=>`<div class="row" style="border-bottom:1px solid var(--line)"><button class="lrow grow" style="border:0" data-act="applyTpl" data-t="${esc(t.id)}"><span class="plus">${I("layers")}</span><span class="grow"><span class="exname">${esc(t.name)}</span><div class="cat">${t.items.length} exercises${t.builtin?" · starter":""}</div></span></button>${t.builtin?"":`<button class="icon-btn" data-act="delTpl" data-t="${esc(t.id)}" aria-label="Delete template">${I("trash")}</button>`}</div>`).join("")}</div>`;
+  } else if(s.type==="saveTpl"){
+    h=head("Save as template")+`<div class="sheet-body"><label class="lbl" for="tplName">Template name</label><input id="tplName" placeholder="e.g. ACL week 3" value=""><div class="small muted mt">Saves the ${S.edit?S.edit.doc.items.length:0} exercises and doses on this list.</div></div><div class="sheet-foot"><button class="btn primary block" data-act="saveTpl">Save template</button></div>`;
+  } else if(s.type==="pick"){
+    const q=S.pickSearch.trim().toLowerCase();
+    const list=Object.values(S.athletes).filter(a=>!S.todaySessions[a.id] && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>(b.lastVisit||"").localeCompare(a.lastVisit||"")||a.name.localeCompare(b.name));
+    h=head("Who's here?")+`<div style="padding:0 18px"><input type="search" placeholder="Search athletes" value="${esc(S.pickSearch)}" data-in="pickSearch"></div><div class="sheet-body mt" id="pickList">${pickListHTML(list)}</div><div class="sheet-foot"><button class="btn block" data-act="newAth">${I("plus")}New athlete</button></div>`;
+  } else if(s.type==="athForm"){
+    const a=s.id?S.athletes[s.id]:null;
+    h=head(a?"Edit athlete":"New athlete")+`<div class="sheet-body">
+      <label class="lbl" for="fName">Name</label><input id="fName" value="${esc(a?a.name:"")}" placeholder="First and last name" autocomplete="off">
+      <label class="lbl" for="fSport">Sport / team</label><input id="fSport" list="sportList" value="${esc(a?a.sport||"":"")}" placeholder="e.g. Men's Soccer" autocomplete="off"><datalist id="sportList">${SPORTS.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
+      <label class="lbl" for="fInj">Injury / body part</label><input id="fInj" value="${esc(a?a.injury||"":"")}" placeholder="e.g. R knee, post-op" autocomplete="off">
+      ${a?`<div class="row mt wrap"><button class="btn sm" data-act="resetCode" data-id="${a.id}">New athlete code</button><button class="btn sm danger" data-act="delAth" data-id="${a.id}">${I("trash")}Delete athlete</button></div>`:""}
+      </div><div class="sheet-foot"><button class="btn primary block" data-act="saveAth" data-id="${a?a.id:""}">${a?"Save":"Add athlete"}</button></div>`;
+  } else if(s.type==="qr"){
+    const a=S.athletes[s.id]; if(!a){ S.sheet=null; return renderSheet(); }
+    h=head(esc(firstName(a.name))+"'s code")+`<div class="sheet-body"><div class="code">${esc(a.code)}</div><div class="qr mt" id="qrBox"></div>
+      <div class="small muted center mt">Scan with the phone camera, or open the app and type the code. It only shows today's exercises.</div>
+      ${APP_URL?`<div class="row mt"><button class="btn grow" data-act="copyLink" data-code="${esc(a.code)}">${I("copy")}Copy link</button><button class="btn grow" data-act="preview" data-code="${esc(a.code)}">${I("eye")}Preview</button></div>`:`<button class="btn block mt" data-act="preview" data-code="${esc(a.code)}">${I("eye")}Preview athlete view</button>`}</div>`;
+  } else if(s.type==="confirm"){
+    h=head(esc(s.title))+`<div class="sheet-body"><p>${esc(s.msg)}</p></div><div class="sheet-foot row"><button class="btn grow" data-act="closeSheet">Cancel</button><button class="btn danger grow" data-act="confirmYes">${esc(s.yes||"Delete")}</button></div>`;
+  }
+  el.innerHTML=h; wrap.classList.remove("hidden");
+  const nb=el.querySelector(".sheet-body"); if(nb) nb.scrollTop=scroll;
+  if(s.type==="qr"){ const box=$("qrBox"); const a=S.athletes[s.id];
+    if(box && a){ if(window.QRCode && APP_URL){ try{ new window.QRCode(box,{text:linkFor(a.code),width:440,height:440,colorDark:"#123d2b",colorLight:"#ffffff"}); }catch(_){ box.textContent="QR code unavailable"; } } else box.innerHTML=`<div class="small muted center">QR code appears once the app link is set.</div>`; } }
+}
+function pickListHTML(list){
+  if(!Object.keys(S.athletes).length) return `<div class="empty small">No athletes yet. Add one below.</div>`;
+  if(!list.length) return `<div class="empty small">Everyone matching is already in today's list.</div>`;
+  return list.map(a=>`<button class="arow" data-act="pickAth" data-id="${a.id}"><div class="avatar">${esc(initials(a.name))}</div><div class="grow"><div class="aname">${esc(a.name)}</div><div class="ameta">${esc(a.sport||"")}${a.injury?" · "+esc(a.injury):""}</div></div><div class="small muted">${esc(relDay(a.lastVisit))}</div></button>`).join("");
+}
+
+/* ---------- athlete (student) view ---------- */
+function openStudent(code){
+  const st=S.student;
+  if(st.code===code && st.unsub){ S.route={name:"student"}; render(); return; }
+  closeStudent();
+  st.code=code; st.board=null; st.loaded=false; st.slow=false; st.local={}; st.err=""; st.readonly = S.canWrite===false;
+  S.route={name:"student"}; render(); window.scrollTo(0,0);
+  if(!S.db) return;
+  const t=setTimeout(()=>{ if(!st.loaded){ st.slow=true; rerender(); } },10000);
+  st.unsub=S.db.doc("board/"+code).onSnapshot(d=>{
+    if(!d.metadata.fromCache){ clearTimeout(t); st.slow=false; }
+    st.loaded = st.loaded || !d.metadata.fromCache || d.exists;
+    if(!isBusy("board/"+code)) st.board = d.exists ? clone(d.data()) : null;
+    rerender();
+  }, e=>{ clearTimeout(t); st.loaded=true; st.err=(e&&e.code)||"error"; rerender(); });
+}
+function closeStudent(){ const st=S.student; if(st.unsub){ st.unsub(); st.unsub=null; } st.code=null; }
+function stItems(){ const b=S.student.board; if(!b || b.date!==today()) return null; return (b.items||[]).map(i=>({...i, done: S.student.readonly ? (S.student.local[i.id] ?? !!i.done) : !!i.done})); }
+function vStudent(){
+  const st=S.student; const b=st.board; const items=stItems();
+  let h="";
+  if(S.trainer) h+=`<div class="banner" style="margin:-4px 0 14px"><span>Athlete view preview</span><button class="btn sm" data-act="stBack">${I("back")}Back to trainer</button></div>`;
+  if(!S.db) return h+vNoDb();
+  if(st.err) return h+`<div class="empty"><b>Can't load your exercises</b>Ask your trainer to check your access.</div>`;
+  if(!st.loaded) return h+`<div class="empty"><b>Loading…</b>${st.slow?"This is taking longer than usual. Check your connection.":""}</div>`;
+  if(!items) return h+`<div class="hero"><div class="sub">Code ${esc(st.code)}</div><h1>Hi${b?", "+esc(b.first):""}</h1><div class="sub">${esc(fmtDate(today()))}</div></div><div class="empty"><b>Nothing posted yet</b>Your trainer hasn't added today's exercises. This page updates on its own.</div><button class="btn block ghost" data-act="stCode">Use a different code</button>`;
+  const done=items.filter(i=>i.done).length, all=items.length>0&&done===items.length, pct=items.length?Math.round(done/items.length*100):0;
+  h+=`<div class="hero"><div class="sub">${esc(fmtDate(today()))}</div><h1>Hi, ${esc(b.first)}</h1><div class="sub"><b style="color:#fff">${done} of ${items.length}</b> exercises done</div><div class="prog"><i style="width:${pct}%"></i></div></div>`;
+  if(st.readonly) h+=`<div class="banner">Your check-offs stay on this phone. Your trainer can't see them.</div>`;
+  if(!items.length) h+=`<div class="empty"><b>Exercises coming</b>Your trainer is putting your list together.</div>`;
+  h+=items.map(i=>`<div class="ex ${i.done?"done":""}" style="min-height:66px;cursor:pointer" data-act="stToggle" data-i="${esc(i.id)}" role="button"><span class="check ${i.done?"on":""}">${I("check",3)}</span><span class="grow"><span class="exname">${esc(i.name)}</span>${isUrl(i.video)?`<br><a class="watch" href="${esc(i.video)}" target="_blank" rel="noopener">${I("play",2)}Watch how</a>`:""}</span><span class="dose">${esc(i.dose||"")}</span></div>`).join("");
+  h+=`<div class="stick">`;
+  if(all && items.length){
+    const pain=b.pain;
+    h+=`<div class="card"><div class="exname">All done. How's the pain right now?</div><div class="small muted" style="margin:2px 0 10px">0 = none, 10 = worst</div><div class="pain">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="${pain===n?"on":""}" data-act="stPain" data-n="${n}" ${st.readonly?"disabled":""}>${n}</button>`).join("")}</div>${b.status==="done"?`<div class="small center mt" style="color:var(--g2);font-weight:700">Sent to your trainer. Nice work.</div>`:""}</div>`;
+  }
+  if(!st.readonly){
+    const waiting=b.status==="help";
+    h+=waiting?`<button class="btn block" data-act="stHelp" style="background:var(--gold2);color:#5b4100">Trainer notified · tap to cancel</button>`:`<button class="btn gold block" data-act="stHelp">${I("bell")}I need the trainer</button>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+function vCode(){
+  return `<div class="hero"><h1>Your exercises</h1><div class="sub">Scan the QR code from your trainer, or type your code.</div></div>
+    <label class="lbl" for="codeIn">Athlete code</label><input id="codeIn" class="codein" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="•••••" value="">
+    <button class="btn primary block mt" data-act="stGo">Show my exercises</button>
+    <div class="center" style="margin-top:28px"><button class="small muted" style="text-decoration:underline" data-act="toLogin">Trainer sign in</button></div>`;
+}
+function vLogin(){
+  return `<div class="hero"><h1>Trainer sign in</h1><div class="sub">Athletes don't sign in. They scan their QR code.</div></div>
+    <label class="lbl" for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" autocapitalize="off" value="${esc(S.loginEmail||"")}">
+    <label class="lbl" for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password">
+    ${S.loginErr?`<div class="banner mt">${esc(S.loginErr)}</div>`:""}
+    <button class="btn primary block mt" data-act="doLogin">${S.loggingIn?"Signing in…":"Sign in"}</button>
+    <button class="btn ghost block mt" data-act="toCode">I'm an athlete</button>`;
+}
+function stWrite(body){ const st=S.student; st.board=body; rerender(); if(!st.readonly) write("board/"+st.code, body); }
+
+/* ---------- actions ---------- */
+const A = {
+  tab(el){ S.tab=el.dataset.tab; S.route={name:S.tab}; S.edit=null; render(); window.scrollTo(0,0); },
+  openAth(el){ S.route={name:"athlete", id:el.dataset.id}; S.edit=null; render(); window.scrollTo(0,0); },
+  openSess(el){ openSession(el.dataset.id, el.dataset.date || today()); },
+  back(){ const p=S.prev; S.edit=null; S.route = (p && p.name!=="session") ? p : {name:S.tab}; render(); window.scrollTo(0,0); },
+  gotIt(el){ const code=el.dataset.code; const b=S.boards[code]; if(!b) return; const nb={...clone(b), status:"", statusAt:Date.now()}; S.boards[code]=nb; write("board/"+code, nb); render(); },
+  openPick(){ S.pickSearch=""; openSheet({type:"pick"}); },
+  pickAth(el){ closeSheet(); openSession(el.dataset.id, today()); },
+  newAth(){ openSheet({type:"athForm", id:"", from:S.sheet&&S.sheet.type}); setTimeout(()=>{ const f=$("fName"); if(f) f.focus(); },50); },
+  editAth(el){ openSheet({type:"athForm", id:el.dataset.id}); },
+  saveAth(el){
+    const name=$("fName").value.trim(), sport=$("fSport").value.trim(), injury=$("fInj").value.trim();
+    if(!name){ toast("Add a name first"); $("fName").focus(); return; }
+    const id=el.dataset.id;
+    if(id){ const a={...S.athletes[id], name, sport, injury}; S.athletes[id]=a; write("athletes/"+id, a); if(S.todaySessions[id] && a.code && S.boards[a.code]){ const b={...clone(S.boards[a.code]), first:firstName(name)}; S.boards[a.code]=b; write("board/"+a.code,b); } closeSheet(); render(); toast("Saved"); return; }
+    const nid=uid(); const a={id:nid, name, sport, injury, code:newCode(), createdAt:Date.now(), lastVisit:""};
+    S.athletes[nid]=a; write("athletes/"+nid, a);
+    const from=S.sheet&&S.sheet.from; closeSheet();
+    if(from==="pick" || S.route.name==="today"){ openSession(nid, today()); toast("Added "+firstName(name)); }
+    else { S.route={name:"athlete", id:nid}; render(); toast("Added "+firstName(name)); }
+  },
+  resetCode(el){
+    const id=el.dataset.id; const a=S.athletes[id]; if(!a) return;
+    S.confirmFn=()=>{ const old=a.code; const code=newCode(); const na={...a, code}; S.athletes[id]=na; write("athletes/"+id, na);
+      const b=S.boards[old]; if(b){ S.boards[code]=clone(b); write("board/"+code, b); remove("board/"+old); delete S.boards[old]; }
+      closeSheet(); render(); toast("New code: "+code); };
+    openSheet({type:"confirm", title:"New code?", msg:"The old code and QR stop working. Give "+firstName(a.name)+" the new one.", yes:"Make new code"});
+  },
+  delAth(el){
+    const id=el.dataset.id; const a=S.athletes[id]; if(!a) return;
+    S.confirmFn=async ()=>{
+      closeSheet();
+      let sessions=[]; try{ const snap=await S.db.collection("sessions").where("athleteId","==",id).get(); sessions=snap.docs.map(d=>d.id); }catch(_){}
+      sessions.forEach(sid=>remove("sessions/"+sid)); if(a.code){ remove("board/"+a.code); delete S.boards[a.code]; }
+      remove("athletes/"+id); delete S.athletes[id]; delete S.todaySessions[id];
+      S.route={name:"athletes"}; S.tab="athletes"; render(); toast("Deleted "+firstName(a.name));
+    };
+    openSheet({type:"confirm", title:"Delete "+firstName(a.name)+"?", msg:"This removes "+a.name+" and their whole history. It can't be undone."});
+  },
+  confirmYes(){ const f=S.confirmFn; S.confirmFn=null; if(f) f(); },
+  showQR(el){ openSheet({type:"qr", id:el.dataset.id}); },
+  async copyLink(el){ const url=linkFor(el.dataset.code); try{ await navigator.clipboard.writeText(url); toast("Link copied"); }catch(_){ toast(url); } },
+  preview(el){ closeSheet(); location.hash="athlete-"+el.dataset.code; },
+  sportF(el){ S.sportFilter=el.dataset.s; render(); },
+  closeSheet(){ closeSheet(); },
+  // session editor
+  openLib(){ S.libSearch=""; openSheet({type:"lib"}); },
+  libCat(el){ S.libCat=el.dataset.c; renderSheet(); },
+  addEx(el){ addExercise(el.dataset.name, el.dataset.cat); },
+  newEx(){ const name=S.libSearch.trim(); if(!name) return; const custom=[...(S.lib.custom||[]), {name, cat:"Mine"}]; S.lib={...S.lib, custom}; write("config/library", S.lib); S.libSearch=""; addExercise(name,"Mine"); },
+  openItem(el){ openSheet({type:"item", iid:el.dataset.i}); },
+  setDose(el){ const it=curItem(); if(!it) return; it.dose=el.dataset.d; saveSession(); closeSheet(); render(); },
+  customDose(){ const it=curItem(); const v=$("doseIn").value.trim(); if(!it||!v) return; it.dose=v; saveSession(); closeSheet(); render(); },
+  moveItem(el){ const items=S.edit.doc.items; const i=items.findIndex(x=>x.id===S.sheet.iid); const j=i+Number(el.dataset.dir); if(i<0||j<0||j>=items.length) return; [items[i],items[j]]=[items[j],items[i]]; saveSession(); render(); },
+  removeItem(){ const items=S.edit.doc.items; const i=items.findIndex(x=>x.id===S.sheet.iid); if(i<0) return; const [gone]=items.splice(i,1); saveSession(); closeSheet(); render(); toast("Removed "+gone.name); },
+  saveVideo(){
+    const it=curItem(); const v=($("vidIn").value||"").trim(); if(!it) return;
+    if(!isUrl(v)){ toast("Paste a full link starting with https://"); return; }
+    S.videos={...S.videos, [it.name.toLowerCase()]:v}; write("config/videos", {map:S.videos});
+    refreshBoardsFor(it.name); renderSheet(); render(); toast("Video saved for "+it.name);
+  },
+  removeVideo(){
+    const it=curItem(); if(!it) return; const m={...S.videos}; delete m[it.name.toLowerCase()]; S.videos=m; write("config/videos", {map:m});
+    refreshBoardsFor(it.name); renderSheet(); render(); toast("Video removed");
+  },
+  toggleItem(el){ const it=S.edit.doc.items.find(x=>x.id===el.dataset.i); if(!it) return; it.done=!it.done; saveSession(true); render(); },
+  repeatLast(){
+    const e=S.edit; const hist=S.history[e.aid];
+    if(!hist){ toast("Still loading history…"); return; }
+    const last=hist.find(s=>s.date<e.date && (s.items||[]).length);
+    if(!last){ toast("No earlier session to copy"); return; }
+    const have=new Set(e.doc.items.map(i=>i.name.toLowerCase())); let n=0;
+    last.items.forEach(i=>{ if(!have.has(i.name.toLowerCase())){ e.doc.items.push({id:uid(), name:i.name, dose:i.dose||"", done:false}); n++; } });
+    if(n) saveSession(); render(); toast(n ? `Copied ${n} from ${fmtDate(last.date)}` : "Already has everything from last time");
+  },
+  openTpl(){ openSheet({type:"tpl"}); },
+  applyTpl(el){
+    const t=[...BUILTIN_TPL, ...(S.templates.list||[])].find(x=>x.id===el.dataset.t); if(!t) return;
+    const e=S.edit; const have=new Set(e.doc.items.map(i=>i.name.toLowerCase())); let n=0;
+    t.items.forEach(i=>{ if(!have.has(i.name.toLowerCase())){ e.doc.items.push({id:uid(), name:i.name, dose:i.dose||"", done:false}); n++; } });
+    if(n) saveSession(); closeSheet(); render(); toast(n?`Added ${n} from “${t.name}”`:"Those are already on the list");
+  },
+  delTpl(el){ const list=(S.templates.list||[]).filter(t=>t.id!==el.dataset.t); S.templates={...S.templates, list}; write("config/templates", S.templates); renderSheet(); toast("Template deleted"); },
+  openSaveTpl(){ openSheet({type:"saveTpl"}); setTimeout(()=>{ const f=$("tplName"); if(f) f.focus(); },50); },
+  saveTpl(){ const name=$("tplName").value.trim(); if(!name){ toast("Give it a name"); return; } const items=S.edit.doc.items.map(i=>({name:i.name, dose:i.dose||""})); const list=[...(S.templates.list||[]), {id:uid(), name, items}]; S.templates={...S.templates, list}; write("config/templates", S.templates); closeSheet(); toast("Template saved"); },
+  // athlete view
+  stToggle(el){
+    const st=S.student; const id=el.dataset.i;
+    if(st.readonly){ const cur=(stItems()||[]).find(i=>i.id===id); if(cur){ st.local[id]=!cur.done; render(); } return; }
+    const b=clone(st.board); const it=(b.items||[]).find(i=>i.id===id); if(!it) return; it.done=!it.done;
+    if(b.status==="done" && !it.done) b.status="";
+    stWrite(b);
+  },
+  stHelp(){ const st=S.student; const b=clone(st.board); b.status = b.status==="help" ? "" : "help"; b.statusAt=Date.now(); stWrite(b); if(b.status==="help") toast("Your trainer can see you're waiting"); },
+  stPain(el){ const st=S.student; const b=clone(st.board); b.pain=Number(el.dataset.n); b.status="done"; b.statusAt=Date.now(); stWrite(b); },
+  stGo(){ const v=($("codeIn").value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,""); if(v.length<4){ toast("Enter the code from your trainer"); return; } location.hash="athlete-"+v; },
+  stCode(){ closeStudent(); history.replaceState(null,"",location.pathname+location.search); S.route={name:"code"}; render(); },
+  toLogin(){ S.loginErr=""; S.route={name:"login"}; render(); },
+  toCode(){ S.route={name:"code"}; render(); },
+  async doLogin(){
+    const email=($("lEmail").value||"").trim(), pass=$("lPass").value||"";
+    S.loginEmail=email;
+    if(!email||!pass){ S.loginErr="Enter your email and password."; render(); return; }
+    if(!S.be.isTrainer(email)){ S.loginErr="That email isn't set up as a trainer for this app."; render(); return; }
+    S.loggingIn=true; S.loginErr=""; render();
+    try{ await S.be.signIn(email, pass); }
+    catch(e){ S.loginErr = (e&&e.code==="auth/too-many-requests") ? "Too many tries. Wait a minute and try again." : (e&&e.code==="auth/network-request-failed") ? "No connection. Check your internet." : "Wrong email or password."; }
+    S.loggingIn=false; render();
+  },
+  async signOut(){ try{ await S.be.signOut(); }catch(_){} location.hash=""; location.reload(); },
+  stBack(){ closeStudent(); history.replaceState(null,"",location.pathname+location.search); S.route={name:S.tab}; render(); }
+};
+// Re-send today's lists that include this exercise so athletes see the new video.
+function refreshBoardsFor(name){
+  const l=name.toLowerCase(), td=today();
+  for(const aid in S.todaySessions){
+    const e=S.edit; const d = (e && e.aid===aid && e.date===td) ? e.doc : S.todaySessions[aid];
+    if(d && (d.items||[]).some(i=>i.name.toLowerCase()===l)) pushBoard(aid, d);
+  }
+}
+function curItem(){ return S.edit && S.sheet && S.edit.doc.items.find(i=>i.id===S.sheet.iid); }
+function addExercise(name, cat){
+  const e=S.edit; if(!e) return;
+  e.doc.items.push({id:uid(), name, dose:defaultDose(cat||catOf(name)), done:false});
+  saveSession(); render(); toast("Added "+name);
+}
+const INPUTS = {
+  athSearch(el){ S.search=el.value; const l=$("athList"); if(l) l.innerHTML=athListHTML(); },
+  libSearch(el){ S.libSearch=el.value; const l=$("libList"); if(l) l.innerHTML=libListHTML(); },
+  pickSearch(el){ S.pickSearch=el.value; const q=el.value.trim().toLowerCase(); const list=Object.values(S.athletes).filter(a=>!S.todaySessions[a.id] && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name)); const l=$("pickList"); if(l) l.innerHTML=pickListHTML(list); },
+  note(el){ if(!S.edit) return; S.edit.doc.note=el.value; clearTimeout(INPUTS._t); INPUTS._t=setTimeout(saveSession, 700); }
+};
+document.addEventListener("click", e=>{ if(e.target.closest("a[href]")) return; const el=e.target.closest("[data-act]"); if(!el) return; const f=A[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); } });
+document.addEventListener("input", e=>{ const el=e.target.closest("[data-in]"); if(el && INPUTS[el.dataset.in]) INPUTS[el.dataset.in](el,e); });
+document.addEventListener("keydown", e=>{ if(e.key!=="Enter") return; const id=e.target&&e.target.id;
+  if(id==="codeIn") A.stGo(); else if(id==="lPass"||id==="lEmail") A.doLogin(); else if(id==="doseIn") A.customDose(); else if(id==="vidIn") A.saveVideo(); else if(id==="tplName") A.saveTpl(); else if(id==="fName"||id==="fSport"||id==="fInj"){ const b=document.querySelector('[data-act="saveAth"]'); if(b) A.saveAth(b); }
+  else if(e.target.dataset && e.target.dataset.in==="libSearch"){ const first=document.querySelector("#libList .lrow"); if(first){ e.preventDefault(); first.click(); } } });
+
+/* ---------- routing + start ---------- */
+function onHash(){
+  const m=/^#athlete-([A-Za-z0-9]{4,8})$/.exec(location.hash||"");
+  if(m){ openStudent(m[1].toUpperCase()); return; }
+  closeStudent();
+  if(S.route.name==="loading" && !S.db && !S.initDone) return render();
+  if(!S.db){ S.route={name:"nodb"}; return render(); }
+  if(S.trainer){ if(["loading","student","code","nodb"].includes(S.route.name)) S.route={name:S.tab}; }
+  else if(S.route.name!=="login") S.route={name:"code"};
+  render();
+}
+window.addEventListener("hashchange", onHash);
+function waitBackend(){
+  return new Promise(res=>{
+    if(window.ATR) return res(window.ATR);
+    const t=setTimeout(()=>res(null),12000);
+    window.addEventListener("atr-ready",()=>{ clearTimeout(t); res(window.ATR); },{once:true});
+  });
+}
+(async function init(){
+  render();
+  const be = await waitBackend();
+  S.initDone=true;
+  if(!be || be.error){ S.beError = be ? be.error : "load-failed"; S.route={name:"nodb"}; render(); return; }
+  S.be=be; S.db=be.db; S.canWrite=true;
+  be.onAuth(u=>{
+    const wasTrainer=S.trainer;
+    S.authEmail = u ? u.email : "";
+    S.trainer = !!u && be.isTrainer(u.email);
+    if(wasTrainer && !S.trainer){ location.reload(); return; }
+    if(S.trainer && !S.subsStarted){ S.subsStarted=true; startTrainerSubs(); }
+    if(S.trainer && ["login","code","nodb","loading"].includes(S.route.name)) S.route={name:S.tab};
+    onHash();
+  });
+})();
+if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+<script type="module" src="backend.js"></script>
+</body>
+</html>
