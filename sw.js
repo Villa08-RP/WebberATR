@@ -1,6 +1,6 @@
 // Lets Webber ATR install on a phone and open even with weak Wi-Fi.
 // When you change the app's files, bump the version so phones pick up the update.
-const CACHE = "webber-atr-v3";
+const CACHE = "webber-atr-v4";
 const FILES = ["./", "./index.html", "./config.js", "./backend.js", "./manifest.json", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

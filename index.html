@@ -95,6 +95,19 @@ label.lbl{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;text
 .wait-card{background:var(--gold);color:#1d1606;border-radius:var(--r);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
 .wait-card b{font-size:17px}
 .arow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.plan-card{display:block;width:100%;text-align:left}
+.plan-line svg{width:20px;height:20px;flex:none;color:var(--g2)}
+.goals{margin:10px 0 0;padding-left:20px;font-size:14px;color:var(--ink)}
+.goals li{margin:3px 0}
+.phase{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.phase.now{border:2px solid var(--gold)}
+.phase.past{opacity:.8}
+.phase-head{display:flex;align-items:center;gap:10px;width:100%;padding:14px}
+.phase-wk{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.phase-body{padding:0 14px 14px;border-top:1px dashed var(--line)}
+.phase-body .ex{background:var(--paper)}
+.crit{display:flex;align-items:center;gap:10px;padding:6px 0}
+.crit .check{width:28px;height:28px}
 .out-btn{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:58px;min-height:58px;border-radius:12px;background:var(--g3);color:var(--g);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .out-btn svg{width:20px;height:20px}
 .avatar{width:44px;height:44px;border-radius:50%;background:var(--g);color:var(--gold);display:grid;place-items:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;flex:none}
@@ -151,10 +164,11 @@ const APP_URL = location.origin + location.pathname;
 /* ---------- starter content (trainer can add more) ---------- */
 const DEFAULT_LIB = {
   "Knee": ["Quad sets","Straight leg raise","Heel slides","Short arc quads","Long arc quads","Terminal knee extension","Mini squats","Wall sits","Step-ups","Hamstring curls","Prone knee hangs","Patellar mobilizations","Single-leg balance"],
-  "Hip": ["Glute bridges","Clamshells","Side-lying hip abduction","Monster walks","Hip flexor stretch","Fire hydrants"],
+  "Hip": ["Glute bridges","Single-leg bridges","Clamshells","Side-lying hip abduction","Monster walks","Hip flexor stretch","Fire hydrants","Hamstring isometrics","Nordic hamstring curl"],
   "Ankle": ["Ankle pumps","Ankle alphabet","Towel scrunches","Band 4-way ankle","Calf raises","Calf stretch","Foam balance"],
   "Shoulder": ["Pendulums","Band ER/IR","Scapular retraction","Wall slides","Sleeper stretch","Prone Y-T-W"],
   "Core": ["Plank","Side plank","Dead bugs","Bird dogs","Pallof press"],
+  "Return to sport": ["Jog progression","Sprint progression","Agility ladder","Lateral hops","Double-leg jump & land","Plyo ball throws","Throwing progression"],
   "Cardio & recovery": ["Stationary bike","Elliptical","Ice","Game Ready","E-stim","Heat pack","Foam roll","Stretching"]
 };
 const DOSES = ["3×10","3×15","2×20","3×20","3×30s","2×1 min","5 min","10 min","15 min","20 min"];
@@ -165,6 +179,58 @@ const BUILTIN_TPL = [
   {id:"b-ankle-1",name:"Ankle sprain · phase 1",items:[["Ankle alphabet","2×1 min"],["Towel scrunches","3×15"],["Band 4-way ankle","3×10"],["Calf raises","3×15"],["Ice","15 min"]]},
   {id:"b-shoulder",name:"Shoulder · rotator cuff",items:[["Pendulums","2×1 min"],["Band ER/IR","3×15"],["Scapular retraction","3×15"],["Wall slides","3×10"],["Ice","15 min"]]}
 ].map(t=>({id:t.id,name:t.name,builtin:true,items:t.items.map(([name,dose])=>({name,dose}))}));
+
+/* ---------- suggested treatment plans (general starting points) ---------- */
+const PLAN_NOTE = "General starting point. Adjust to the surgeon's or physician's protocol and to how the athlete responds. Move on by criteria, not only by the calendar.";
+const SUGGESTED_PLANS = [
+  {id:"s-acl", name:"ACL reconstruction (first 16 weeks)", notes: PLAN_NOTE+" Return to sport after ACL reconstruction usually takes 9+ months and needs surgeon clearance plus strength and hop testing.", phases:[
+    {name:"Protection & quad activation", from:1, to:2, goals:"Control pain and swelling\nGet full knee extension\nWake up the quad (no lag on straight leg raise)\nFlexion toward 90°",
+      exercises:[["Quad sets","3×10"],["Straight leg raise","3×10"],["Heel slides","3×15"],["Patellar mobilizations","2×1 min"],["Ankle pumps","3×20"],["Game Ready","15 min"]],
+      criteria:["Full knee extension","Straight leg raise with no lag","Swelling controlled"]},
+    {name:"Range of motion & early strength", from:3, to:6, goals:"Normal walking without crutches\nFlexion toward full\nStart closed-chain strength\nBalance on the surgical leg",
+      exercises:[["Stationary bike","10 min"],["Mini squats","3×15"],["Terminal knee extension","3×15"],["Hamstring curls","3×10"],["Glute bridges","3×15"],["Calf raises","3×15"],["Single-leg balance","3×30s"]],
+      criteria:["Normal gait without crutches","Flexion about 120° or more","No increase in swelling after sessions"]},
+    {name:"Strength & neuromuscular control", from:7, to:12, goals:"Build quad, hamstring and hip strength\nSingle-leg control with good alignment\nHarder balance work",
+      exercises:[["Stationary bike","10 min"],["Step-ups","3×10"],["Wall sits","3×30s"],["Monster walks","3×15"],["Side-lying hip abduction","3×15"],["Foam balance","3×30s"],["Plank","3×30s"]],
+      criteria:["Single-leg squat with good control","Quad strength about 70% of other leg","No pain or swelling with daily activity"]},
+    {name:"Running & power prep", from:13, to:16, goals:"Start running progression when cleared\nLow-level jumping and landing\nSport conditioning",
+      exercises:[["Elliptical","15 min"],["Step-ups","3×12"],["Nordic hamstring curl","3×6"],["Double-leg jump & land","3×8"],["Jog progression","10 min"],["Ice","15 min"]],
+      criteria:["Cleared by surgeon to run","Quad strength about 80% of other leg","Pain-free jogging"]}
+  ]},
+  {id:"s-ankle", name:"Lateral ankle sprain (6 weeks)", notes: PLAN_NOTE, phases:[
+    {name:"Calm it down & move", from:1, to:1, goals:"Control pain and swelling\nGentle range of motion\nWalk as tolerated",
+      exercises:[["Ankle pumps","3×20"],["Ankle alphabet","2×1 min"],["Towel scrunches","3×15"],["Ice","15 min"]],
+      criteria:["Walking with little or no limp","Swelling going down"]},
+    {name:"Strength & balance", from:2, to:3, goals:"Strengthen in all directions\nSingle-leg balance\nKeep fitness up",
+      exercises:[["Stationary bike","10 min"],["Band 4-way ankle","3×10"],["Calf raises","3×15"],["Single-leg balance","3×30s"]],
+      criteria:["Full pain-free range of motion","Single-leg balance 30s"]},
+    {name:"Agility & return to play", from:4, to:6, goals:"Harder balance\nHopping, cutting and agility\nSport-specific drills",
+      exercises:[["Foam balance","3×30s"],["Calf raises","3×20"],["Lateral hops","3×10"],["Agility ladder","5 min"],["Jog progression","10 min"]],
+      criteria:["Pain-free hopping and cutting","Sport drills at full speed"]}
+  ]},
+  {id:"s-ham", name:"Hamstring strain (8 weeks)", notes: PLAN_NOTE, phases:[
+    {name:"Protect & pain-free movement", from:1, to:2, goals:"Pain-free walking\nGentle activation\nKeep hip and core working",
+      exercises:[["Hamstring isometrics","3×10"],["Glute bridges","3×10"],["Stationary bike","10 min"],["Dead bugs","3×10"]],
+      criteria:["Pain-free walking","Pain-free isometric hold"]},
+    {name:"Build strength", from:3, to:5, goals:"Progress hamstring strength\nSingle-leg work\nStart jogging when pain-free",
+      exercises:[["Hamstring curls","3×10"],["Single-leg bridges","3×10"],["Monster walks","3×15"],["Jog progression","10 min"]],
+      criteria:["Pain-free jogging","Strength close to other leg"]},
+    {name:"Speed & return to sport", from:6, to:8, goals:"Eccentric strength\nRunning faster, then sprinting\nSport drills",
+      exercises:[["Nordic hamstring curl","3×6"],["Sprint progression","6 reps"],["Agility ladder","5 min"]],
+      criteria:["Full-speed sprinting pain-free","Strength equal to other leg"]}
+  ]},
+  {id:"s-shoulder", name:"Rotator cuff / shoulder pain (8 weeks)", notes: PLAN_NOTE, phases:[
+    {name:"Calm down & mobility", from:1, to:2, goals:"Reduce pain\nRestore motion\nShoulder blade control",
+      exercises:[["Pendulums","2×1 min"],["Scapular retraction","3×15"],["Sleeper stretch","3×30s"],["Ice","15 min"]],
+      criteria:["Pain at rest gone","Near-full range of motion"]},
+    {name:"Strength", from:3, to:5, goals:"Rotator cuff strength\nScapular strength\nControlled overhead motion",
+      exercises:[["Band ER/IR","3×15"],["Wall slides","3×10"],["Prone Y-T-W","3×10"],["Plank","3×30s"]],
+      criteria:["Pain-free resisted rotation","Full overhead range"]},
+    {name:"Power & return to sport", from:6, to:8, goals:"Faster, sport-like movements\nThrowing or overhead progression",
+      exercises:[["Band ER/IR","3×20"],["Plyo ball throws","3×10"],["Throwing progression","as tolerated"]],
+      criteria:["Pain-free sport movements","Strength equal to other side"]}
+  ]}
+].map(t=>({...t, phases:t.phases.map(p=>({...p, exercises:p.exercises.map(([name,dose])=>({name,dose})), criteria:p.criteria.map(text=>({text}))}))}));
 
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -205,7 +271,7 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 const S = {
   db:null, user:null, trainer:false, canWrite:null,
   ready:false, slow:false, loadErr:"",
-  athletes:{}, todaySessions:{}, boards:{}, lib:{custom:[]}, templates:{list:[]}, videos:{},
+  athletes:{}, todaySessions:{}, boards:{}, lib:{custom:[]}, templates:{list:[]}, videos:{}, plans:{}, planTpls:{list:[]}, planOpen:{},
   history:{}, histSubs:{}, histOrder:[],
   route:{name:"loading"}, tab:"today", prev:null,
   search:"", sportFilter:"", pickSearch:"",
@@ -266,7 +332,7 @@ document.addEventListener("focusout", ()=>setTimeout(()=>{ if(pending && !isTypi
 function render(){
   const r = S.route.name;
   const student = r==="student" || r==="code" || r==="login";
-  $("app").classList.toggle("nopad", student || r==="session" || r==="tplEdit");
+  $("app").classList.toggle("nopad", student || r==="session" || r==="tplEdit" || r==="plan");
   $("barR").textContent = parseDate(today()).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
   const showTabs = S.trainer && ["today","athletes","athlete","library"].includes(r);
   const tabs = $("tabs"); tabs.classList.toggle("hidden", !showTabs);
@@ -282,6 +348,7 @@ function render(){
   else if(r==="code") html = vCode();
   else if(r==="library") html = vLibrary();
   else if(r==="tplEdit") html = vTplEdit();
+  else if(r==="plan") html = vPlan();
   else if(r==="login") html = vLogin();
   if(S.trainer && !student && S.slow && !S.loadErr) html = `<div class="banner">Can't reach the saved data yet. What you see may be out of date.</div>` + html;
   $("view").innerHTML = html;
@@ -314,6 +381,8 @@ function startTrainerSubs(){
   }, fail);
   db.doc("config/library").onSnapshot(d=>{ S.lib = d.exists ? {custom:[], ...d.data()} : {custom:[]}; rerender(); }, ()=>{});
   db.doc("config/videos").onSnapshot(d=>{ S.videos = (d.exists && d.data().map) ? {...d.data().map} : {}; rerender(); }, ()=>{});
+  db.collection("plans").onSnapshot(snap=>{ const o={}; snap.docs.forEach(d=>{ o[d.id]=d.data(); }); S.plans=o; rerender(); }, ()=>{});
+  db.doc("config/plantemplates").onSnapshot(d=>{ S.planTpls = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
   db.doc("config/templates").onSnapshot(d=>{ S.templates = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
   setInterval(()=>{ if(S.route.name==="today") rerender(); }, 30000);
   S.subDate=td;
@@ -366,7 +435,9 @@ function pushBoard(aid, d, force){
   const items=d.items.map(i=>{ const pi=same?(prev.items||[]).find(x=>x.id===i.id):null; return {id:i.id,name:i.name,dose:i.dose||"",video:videoFor(i.name),done: force ? !!i.done : (!!i.done || !!(pi&&pi.done))}; });
   let status = same ? (prev.status||"") : "";
   if(status==="done" && items.some(i=>!i.done)) status="";
-  const body={first:firstName(a.name), date:d.date, items, status, statusAt: same?(prev.statusAt||0):0, pain: same?(prev.pain===undefined?null:prev.pain):null, updatedAt:Date.now()};
+  const pinf=planInfo(activePlan(aid), d.date);
+  const plan = pinf && pinf.w>0 && pinf.w<=pinf.n ? {week:pinf.w, weeks:pinf.n, phase:pinf.ph?pinf.ph.name:"", goals:goalsList(pinf.ph).slice(0,4)} : null;
+  const body={first:firstName(a.name), date:d.date, items, status, statusAt: same?(prev.statusAt||0):0, pain: same?(prev.pain===undefined?null:prev.pain):null, plan, updatedAt:Date.now()};
   S.boards[a.code]=body; write("board/"+a.code, body);
 }
 function saveSession(force){
@@ -422,7 +493,7 @@ function vToday(){
   h+=`<div class="sec"><span>In the room</span>${rows.length>1?`<button class="btn sm ghost" data-act="clearRoom">Clear room</button>`:""}</div>`;
   if(!rows.length) h+=`<div class="empty"><b>${outIds.length?"Room is clear":"Nobody yet"}</b>Add an athlete when they walk in. You can repeat their last session in one tap.</div>`;
   h+=rows.map(({id,a,st})=>{ const pct=st.items.length?Math.round(st.done/st.items.length*100):0;
-    return `<div class="arow"><button class="row grow" style="text-align:left;gap:12px;min-width:0" data-act="openSess" data-id="${id}"><div class="avatar">${esc(initials(a.name))}</div><div class="grow" style="min-width:0"><div class="row"><div class="aname grow">${esc(a.name)}</div>${st.tag}</div><div class="ameta">${esc(a.sport||"")}${a.injury?" · "+esc(a.injury):""} · ${st.done}/${st.items.length} done</div><div class="prog"><i style="width:${pct}%"></i></div></div></button><button class="out-btn" data-act="checkOut" data-id="${id}" aria-label="Done for today, check out ${esc(a.name)}">${I("check",3)}<span>Done</span></button></div>`; }).join("");
+    return `<div class="arow"><button class="row grow" style="text-align:left;gap:12px;min-width:0" data-act="openSess" data-id="${id}"><div class="avatar">${esc(initials(a.name))}</div><div class="grow" style="min-width:0"><div class="row"><div class="aname grow">${esc(a.name)}</div>${st.tag}</div><div class="ameta">${esc(a.sport||"")}${a.injury?" · "+esc(a.injury):""}${(()=>{ const pi=planInfo(activePlan(id)); return pi&&pi.w>0&&pi.w<=pi.n?` · Wk ${pi.w}/${pi.n}`:""; })()} · ${st.done}/${st.items.length} done</div><div class="prog"><i style="width:${pct}%"></i></div></div></button><button class="out-btn" data-act="checkOut" data-id="${id}" aria-label="Done for today, check out ${esc(a.name)}">${I("check",3)}<span>Done</span></button></div>`; }).join("");
   h+=`<button class="btn gold block mt" data-act="openPick">${I("plus")}Add athlete to today</button>`;
   if(outIds.length){
     h+=`<div class="sec"><span>Done for today (${outIds.length})</span><button class="btn sm ghost" data-act="toggleOut">${S.showOut?"Hide":"Show"}</button></div>`;
@@ -460,6 +531,7 @@ function vAthlete(id){
   h+=`<div class="row mt"><div class="avatar" style="width:56px;height:56px;font-size:22px">${esc(initials(a.name))}</div><div class="grow"><h1 style="margin:0">${esc(a.name)}</h1><div class="sub">${esc(a.sport||"No sport")}${a.injury?" · "+esc(a.injury):""}</div></div></div>`;
   h+=`<button class="btn primary block mt" data-act="openSess" data-id="${id}" data-reopen="1">${hasToday?"Open today's session":"Start today's session"}</button>`;
   h+=`<div class="row mt"><button class="btn grow" data-act="showQR" data-id="${id}">${I("qr")}Code ${esc(a.code)}</button><button class="btn" data-act="editAth" data-id="${id}">${I("edit")}Edit</button></div>`;
+  h+=`<div class="sec">Treatment plan</div>`+planCardHTML(id);
   h+=`<div class="sec">History</div>`;
   if(!hist) h+=`<div class="empty small">Loading history…</div>`;
   else if(!hist.length) h+=`<div class="empty small">No sessions yet.</div>`;
@@ -476,7 +548,9 @@ function vSession(){
   const b=a.code&&S.boards[a.code]; const waiting=b&&b.date===e.date&&b.status==="help";
   let h=`<div class="row"><button class="btn sm ghost" data-act="back">${I("back")}Back</button><div class="grow"></div>${waiting?`<button class="btn sm gold" data-act="gotIt" data-code="${esc(a.code)}">Waiting · got it</button>`:""}</div>`;
   h+=`<div class="mt" data-act="openAth" data-id="${e.aid}" style="cursor:pointer"><h1 style="margin-bottom:2px">${esc(a.name)}</h1><div class="sub">${esc(e.date===today()?"Today, "+fmtDate(e.date):fmtDate(e.date))}${a.sport?" · "+esc(a.sport):""} · ${done}/${items.length} done</div></div>`;
-  h+=`<div class="toolbar"><button class="btn sm" data-act="repeatLast">${I("repeat")}Repeat last</button><button class="btn sm" data-act="openTpl">${I("layers")}Templates</button>${items.length?`<button class="btn sm" data-act="openSaveTpl">${I("save")}Save as template</button>`:""}</div>`;
+  const pinf=planInfo(activePlan(e.aid), e.date);
+  if(pinf) h+=`<button class="card row mt plan-line" style="width:100%;text-align:left;padding:10px 12px" data-act="openPlan" data-id="${e.aid}">${I("today")}<span class="grow small"><b>${esc(pinf.label)}</b></span><span class="muted">›</span></button>`;
+  h+=`<div class="toolbar">${pinf&&pinf.ph&&(pinf.ph.exercises||[]).length?`<button class="btn sm gold" data-act="loadWeek">${I("plus")}Week ${pinf.w} plan</button>`:""}<button class="btn sm" data-act="repeatLast">${I("repeat")}Repeat last</button><button class="btn sm" data-act="openTpl">${I("layers")}Templates</button>${items.length?`<button class="btn sm" data-act="openSaveTpl">${I("save")}Save as template</button>`:""}</div>`;
   h+=`<div class="mt">`;
   if(!items.length) h+=`<div class="empty small" style="padding:20px">No exercises yet. Tap <b style="display:inline;font-size:inherit;font-family:inherit;text-transform:none">Add exercise</b>, or repeat last session.</div>`;
   h+=items.map((i,idx)=>`<div class="ex ${i.done?"done":""}"><button class="check ${i.done?"on":""}" data-act="toggleItem" data-i="${esc(i.id)}" aria-label="Mark done">${I("check",3)}</button><div class="grow exname">${esc(i.name)}</div>${videoFor(i.name)?`<a class="icon-btn vid" href="${esc(videoFor(i.name))}" target="_blank" rel="noopener" aria-label="Watch video">${I("play",2)}</a>`:""}<button class="dose" data-act="openItem" data-i="${esc(i.id)}">${esc(i.dose||"set")}</button><button class="icon-btn" data-act="openItem" data-i="${esc(i.id)}" aria-label="More">${I("more")}</button></div>`).join("");
@@ -486,6 +560,95 @@ function vSession(){
   if(e.date===today()) h+= e.doc.checkedOut
     ? `<div class="card mt row"><div class="grow small muted">Checked out for today</div><button class="btn sm" data-act="checkIn" data-id="${e.aid}">Back in the room</button></div>`
     : `<button class="btn primary block mt" data-act="checkOut" data-id="${e.aid}" data-leave="1">${I("check",3)}Done for today</button>`;
+  return h;
+}
+
+/* ---------- treatment plans ---------- */
+function activePlan(aid){ const p=S.plans[aid]; return (p && p.active) ? p : null; }
+function planWeeks(p){ return Math.max(0, ...((p&&p.phases)||[]).map(x=>Number(x.to)||0)); }
+function weekOf(p, date){ if(!p||!p.start) return null; const d=Math.floor((parseDate(date||today())-parseDate(p.start))/864e5); return d<0 ? 0 : Math.floor(d/7)+1; }
+function phaseAt(p, w){ return ((p&&p.phases)||[]).find(x=>w>=Number(x.from) && w<=Number(x.to)) || null; }
+function planInfo(p, date){
+  if(!p) return null; const w=weekOf(p,date), n=planWeeks(p), ph=phaseAt(p,w);
+  let label;
+  if(w===0){ const days=Math.round((parseDate(p.start)-parseDate(date||today()))/864e5); label=`Starts in ${days} day${days===1?"":"s"}`; }
+  else if(w>n) label=`Plan finished (week ${w})`;
+  else label=`Week ${w} of ${n}${ph?" · "+ph.name:""}`;
+  const pct = !n||w<=0 ? 0 : w>n ? 100 : Math.round((w-0.5)/n*100);
+  return {w, n, ph, label, pct};
+}
+function goalsList(ph){ return String((ph&&ph.goals)||"").split("\n").map(s=>s.trim()).filter(Boolean); }
+function instantiatePlan(tpl){
+  return { name: tpl.name||"", start: today(), notes: tpl.notes||"", active:true, createdAt:Date.now(),
+    phases: (tpl.phases||[]).map(ph=>({ id:uid(), name:ph.name||"", from:Number(ph.from)||1, to:Number(ph.to)||Number(ph.from)||1, goals:ph.goals||"",
+      exercises:(ph.exercises||[]).map(e=>({id:uid(), name:e.name, dose:e.dose||""})),
+      criteria:(ph.criteria||[]).map(c=>({id:uid(), text:c.text, met:false})) })) };
+}
+function planToTemplate(p, name){
+  return { id:uid(), name, notes:p.notes||"", phases:(p.phases||[]).map(ph=>({ name:ph.name, from:ph.from, to:ph.to, goals:ph.goals||"",
+    exercises:(ph.exercises||[]).map(e=>({name:e.name, dose:e.dose||""})), criteria:(ph.criteria||[]).map(c=>({text:c.text})) })) };
+}
+let planT={};
+function savePlan(aid, now){
+  const p=S.plans[aid]; if(!p) return;
+  p.updatedAt=Date.now();
+  clearTimeout(planT[aid]);
+  const go=()=>{ write("plans/"+aid, p); const s=S.todaySessions[aid]; if(s && !s.checkedOut){ const d=(S.edit&&S.edit.aid===aid&&S.edit.date===today())?S.edit.doc:s; pushBoard(aid, d); } };
+  if(now) go(); else planT[aid]=setTimeout(go, 500);
+}
+function planCardHTML(aid){
+  const p=activePlan(aid);
+  if(!p) return `<div class="card"><div class="small muted">No treatment plan yet. For longer injuries, map out the weeks, goals and exercises.</div><button class="btn block mt" data-act="startPlan" data-id="${aid}">${I("today")}Start a treatment plan</button></div>`;
+  const inf=planInfo(p); const g=goalsList(inf.ph).slice(0,3);
+  return `<button class="card plan-card" data-act="openPlan" data-id="${aid}"><div class="row"><div class="grow"><div class="aname">${esc(p.name||"Treatment plan")}</div><div class="ameta">${esc(inf.label)}</div></div><span class="muted" style="font-size:22px">›</span></div>
+    <div class="prog"><i style="width:${inf.pct}%"></i></div>${g.length?`<ul class="goals">${g.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</button>`;
+}
+function vPlan(){
+  const aid=S.planAid, a=S.athletes[aid], p=S.plans[aid];
+  if(!a || !p) return `<div class="empty"><b>Plan not found</b><button class="btn mt" data-act="planBack">Back</button></div>`;
+  const inf=planInfo(p);
+  let h=`<div class="row"><button class="btn sm ghost" data-act="planBack">${I("back")}${esc(firstName(a.name))}</button><div class="grow"></div><span class="small muted">Saved automatically</span></div>`;
+  h+=`<h1 class="mt" style="margin-bottom:2px">Treatment plan</h1><div class="sub">${esc(a.name)}${a.injury?" · "+esc(a.injury):""}</div>`;
+  if(!p.active) h+=`<div class="banner mt">This plan was ended. <button class="btn sm" data-act="reopenPlan">Make it active again</button></div>`;
+  h+=`<label class="lbl" for="planName">Plan name</label><input id="planName" value="${esc(p.name||"")}" placeholder="e.g. R ACL reconstruction" data-in="planName" style="font-weight:700">`;
+  h+=`<div class="row"><div class="grow"><label class="lbl" for="planStart">Start date (injury or surgery)</label><input id="planStart" type="date" value="${esc(p.start||"")}" data-in="planStart"></div></div>`;
+  h+=`<div class="card mt"><div class="row"><div class="grow"><div class="pill-n">${esc(inf.w>0&&inf.w<=inf.n?"Week "+inf.w:"")}</div><div class="small muted">${esc(inf.label)}</div></div><div class="small muted">${inf.n} weeks total</div></div><div class="prog"><i style="width:${inf.pct}%"></i></div></div>`;
+  h+=`<div class="sec"><span>Phases</span></div>`;
+  const phases=p.phases||[];
+  if(!phases.length) h+=`<div class="empty small" style="padding:18px">Add the first phase of the plan.</div>`;
+  h+=phases.map((ph,idx)=>{
+    const now = inf.ph && inf.ph.id===ph.id; const past = inf.w > Number(ph.to);
+    const open = S.planOpen[ph.id]!==undefined ? S.planOpen[ph.id] : now;
+    const met=(ph.criteria||[]).filter(c=>c.met).length, tot=(ph.criteria||[]).length;
+    let c=`<div class="phase ${now?"now":""} ${past?"past":""}"><button class="phase-head" data-act="phToggle" data-p="${ph.id}"><div class="grow" style="text-align:left"><div class="phase-wk">Weeks ${esc(ph.from)}–${esc(ph.to)}${now?` <span class="tag wait">Now</span>`:past?` <span class="tag mute">Done</span>`:""}</div><div class="aname">${esc(ph.name||"Untitled phase")}</div><div class="ameta">${(ph.exercises||[]).length} exercises${tot?` · ${met}/${tot} criteria met`:""}</div></div><span class="muted" style="font-size:22px">${open?"–":"+"}</span></button>`;
+    if(open){
+      c+=`<div class="phase-body">
+        <label class="lbl">Phase name</label><input value="${esc(ph.name||"")}" placeholder="e.g. Strength & control" data-in="phName" data-p="${ph.id}">
+        <div class="row"><div class="grow"><label class="lbl">From week</label><input type="number" inputmode="numeric" min="1" value="${esc(ph.from)}" data-in="phFrom" data-p="${ph.id}"></div><div class="grow"><label class="lbl">To week</label><input type="number" inputmode="numeric" min="1" value="${esc(ph.to)}" data-in="phTo" data-p="${ph.id}"></div></div>
+        <label class="lbl">Goals (one per line)</label><textarea rows="3" placeholder="What this phase is for" data-in="phGoals" data-p="${ph.id}">${esc(ph.goals||"")}</textarea>
+        <label class="lbl">Exercises</label>
+        ${(ph.exercises||[]).map(e=>`<div class="ex"><div class="grow exname">${esc(e.name)}</div>${videoFor(e.name)?`<a class="icon-btn vid" href="${esc(videoFor(e.name))}" target="_blank" rel="noopener" aria-label="Watch video">${I("play",2)}</a>`:""}<button class="dose" data-act="openItem" data-p="${ph.id}" data-i="${esc(e.id)}">${esc(e.dose||"set")}</button><button class="icon-btn" data-act="openItem" data-p="${ph.id}" data-i="${esc(e.id)}" aria-label="More">${I("more")}</button></div>`).join("")}
+        <button class="btn block" data-act="phAddEx" data-p="${ph.id}">${I("plus")}Add exercises</button>
+        <label class="lbl">Criteria to move on</label>
+        ${(ph.criteria||[]).map(cr=>`<div class="crit"><button class="check ${cr.met?"on":""}" data-act="critToggle" data-p="${ph.id}" data-c="${cr.id}" aria-label="Criteria met">${I("check",3)}</button><div class="grow ${cr.met?"muted":""}">${esc(cr.text)}</div><button class="icon-btn" data-act="critDel" data-p="${ph.id}" data-c="${cr.id}" aria-label="Remove">${I("x")}</button></div>`).join("")}
+        <div class="row"><input id="crit-${ph.id}" class="grow" placeholder="Add a criterion, e.g. Full extension"><button class="btn" data-act="critAdd" data-p="${ph.id}">Add</button></div>
+        <div class="row mt"><button class="btn sm ghost" data-act="phMove" data-p="${ph.id}" data-dir="-1" ${idx===0?"disabled":""}>${I("up")}</button><button class="btn sm ghost" data-act="phMove" data-p="${ph.id}" data-dir="1" ${idx===phases.length-1?"disabled":""}>${I("down")}</button><div class="grow"></div><button class="btn sm danger" data-act="phDel" data-p="${ph.id}">${I("trash")}Delete phase</button></div>
+      </div>`;
+    }
+    return c+`</div>`;
+  }).join("");
+  h+=`<button class="btn gold block mt" data-act="phAdd">${I("plus")}Add phase</button>`;
+  h+=`<label class="lbl" for="planNotes">Plan notes</label><textarea id="planNotes" rows="3" placeholder="Surgeon protocol, restrictions, return-to-play notes…" data-in="planNotes">${esc(p.notes||"")}</textarea>`;
+  h+=`<div class="row mt wrap"><button class="btn grow" data-act="planSaveTpl">${I("save")}Save as plan template</button>${p.active?`<button class="btn danger grow" data-act="planEnd">End plan</button>`:""}</div>`;
+  return h;
+}
+function planTplListHTML(){
+  const mine=S.planTpls.list||[];
+  let h=`<div class="sec">Your plan templates</div>`;
+  h+= mine.length ? mine.map(t=>`<div class="arow"><div class="avatar" style="font-size:15px">${I("today")}</div><div class="grow"><div class="aname">${esc(t.name)}</div><div class="ameta">${planWeeks(t)} weeks · ${(t.phases||[]).length} phases</div></div><button class="icon-btn" data-act="delPlanTpl" data-t="${esc(t.id)}" aria-label="Delete plan template">${I("trash")}</button></div>`).join("") : `<div class="empty small" style="padding:18px">None yet. Open an athlete's plan and tap “Save as plan template” to reuse it.</div>`;
+  h+=`<div class="sec">Suggested plans</div><div class="small muted" style="margin:-2px 2px 8px">General starting points. Adjust them to the surgeon's protocol and the athlete.</div>`;
+  h+=SUGGESTED_PLANS.map(t=>`<div class="arow" style="opacity:.9"><div class="avatar" style="background:var(--g3);color:var(--g2);font-size:15px">${I("today")}</div><div class="grow"><div class="aname">${esc(t.name)}</div><div class="ameta">${t.phases.map(p=>esc(p.name)).join(" → ")}</div></div></div>`).join("");
+  h+=`<div class="small muted center mt">To use one, open an athlete → Start a treatment plan.</div>`;
   return h;
 }
 
@@ -502,7 +665,8 @@ function vLibrary(){
   if(!S.ready) return `<div class="empty"><b>Loading…</b></div>`;
   const tab=S.lvTab||"ex";
   let h=`<h1>Library</h1><div class="sub">Your exercises, videos and templates. Set them up once, use them in every session.</div>`;
-  h+=`<div class="chips mt"><button class="chip ${tab==="ex"?"on":""}" data-act="lvTab" data-t="ex">Exercises (${allExercises().length})</button><button class="chip ${tab==="tpl"?"on":""}" data-act="lvTab" data-t="tpl">Templates (${BUILTIN_TPL.length+(S.templates.list||[]).length})</button></div>`;
+  h+=`<div class="chips mt"><button class="chip ${tab==="ex"?"on":""}" data-act="lvTab" data-t="ex">Exercises (${allExercises().length})</button><button class="chip ${tab==="tpl"?"on":""}" data-act="lvTab" data-t="tpl">Templates (${BUILTIN_TPL.length+(S.templates.list||[]).length})</button><button class="chip ${tab==="plans"?"on":""}" data-act="lvTab" data-t="plans">Plans (${SUGGESTED_PLANS.length+(S.planTpls.list||[]).length})</button></div>`;
+  if(tab==="plans"){ h+=planTplListHTML(); return h; }
   if(tab==="ex"){
     const cats=["All",...libCats()];
     h+=`<div class="row mt"><input type="search" class="grow" placeholder="Search exercises" value="${esc(S.lvSearch||"")}" data-in="lvSearch"><button class="btn primary" data-act="newExForm">${I("plus")}New</button></div>`;
@@ -624,6 +788,16 @@ function renderSheet(){
     h=head(esc(firstName(a.name))+"'s code")+`<div class="sheet-body"><div class="code">${esc(a.code)}</div><div class="qr mt" id="qrBox"></div>
       <div class="small muted center mt">Scan with the phone camera, or open the app and type the code. It only shows today's exercises.</div>
       ${APP_URL?`<div class="row mt"><button class="btn grow" data-act="copyLink" data-code="${esc(a.code)}">${I("copy")}Copy link</button><button class="btn grow" data-act="preview" data-code="${esc(a.code)}">${I("eye")}Preview</button></div>`:`<button class="btn block mt" data-act="preview" data-code="${esc(a.code)}">${I("eye")}Preview athlete view</button>`}</div>`;
+  } else if(s.type==="startPlan"){
+    const a=S.athletes[s.id]; const mine=S.planTpls.list||[];
+    const row=(t,src)=>`<button class="lrow" data-act="pickPlan" data-src="${src}" data-t="${esc(t.id)}"><span class="plus">${I("today")}</span><span class="grow"><span class="exname">${esc(t.name)}</span><div class="cat">${planWeeks(t)} weeks · ${(t.phases||[]).length} phases</div></span></button>`;
+    h=head("Plan for "+esc(a?firstName(a.name):""))+`<div class="sheet-body">
+      ${mine.length?`<label class="lbl">Your plan templates</label>${mine.map(t=>row(t,"mine")).join("")}`:""}
+      <label class="lbl">Suggested plans</label><div class="small muted" style="margin-bottom:4px">General starting points. You'll adjust weeks, goals and exercises next.</div>${SUGGESTED_PLANS.map(t=>row(t,"sug")).join("")}
+      <label class="lbl">Or</label><button class="lrow" data-act="pickPlan" data-src="blank"><span class="plus">${I("plus")}</span><span class="grow"><span class="exname">Blank plan</span><div class="cat">Build it from scratch</div></span></button>
+    </div>`;
+  } else if(s.type==="planTplName"){
+    h=head("Save as plan template")+`<div class="sheet-body"><label class="lbl" for="ptName">Template name</label><input id="ptName" value="${esc((S.plans[S.planAid]||{}).name||"")}" placeholder="e.g. ACL reconstruction (my protocol)"><div class="small muted mt">Saves the phases, goals, exercises and criteria (not dates or check marks) so you can start the next athlete from it.</div></div><div class="sheet-foot"><button class="btn primary block" data-act="planTplSave">Save plan template</button></div>`;
   } else if(s.type==="exForm"){
     h=exFormHTML(s);
   } else if(s.type==="confirm"){
@@ -668,6 +842,7 @@ function vStudent(){
   if(!items) return h+`<div class="hero"><div class="sub">Code ${esc(st.code)}</div><h1>Hi${b?", "+esc(b.first):""}</h1><div class="sub">${esc(fmtDate(today()))}</div></div><div class="empty"><b>Nothing posted yet</b>Your trainer hasn't added today's exercises. This page updates on its own.</div><button class="btn block ghost" data-act="stCode">Use a different code</button>`;
   const done=items.filter(i=>i.done).length, all=items.length>0&&done===items.length, pct=items.length?Math.round(done/items.length*100):0;
   h+=`<div class="hero"><div class="sub">${esc(fmtDate(today()))}</div><h1>Hi, ${esc(b.first)}</h1><div class="sub"><b style="color:#fff">${done} of ${items.length}</b> exercises done</div><div class="prog"><i style="width:${pct}%"></i></div></div>`;
+  if(b.plan && b.plan.week) h+=`<div class="card"><div class="row"><div class="grow"><div class="small muted" style="font-weight:700;letter-spacing:.06em;text-transform:uppercase">Your plan</div><div class="aname">Week ${esc(b.plan.week)} of ${esc(b.plan.weeks)}${b.plan.phase?" · "+esc(b.plan.phase):""}</div></div></div><div class="prog"><i style="width:${Math.round(b.plan.week/Math.max(1,b.plan.weeks)*100)}%"></i></div>${(b.plan.goals||[]).length?`<ul class="goals">${b.plan.goals.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</div>`;
   if(st.readonly) h+=`<div class="banner">Your check-offs stay on this phone. Your trainer can't see them.</div>`;
   if(!items.length) h+=`<div class="empty"><b>Exercises coming</b>Your trainer is putting your list together.</div>`;
   h+=items.map(i=>`<div class="ex ${i.done?"done":""}" style="min-height:66px;cursor:pointer" data-act="stToggle" data-i="${esc(i.id)}" role="button"><span class="check ${i.done?"on":""}">${I("check",3)}</span><span class="grow"><span class="exname">${esc(i.name)}</span>${isUrl(i.video)?`<br><a class="watch" href="${esc(i.video)}" target="_blank" rel="noopener">${I("play",2)}Watch how</a>`:""}</span><span class="dose">${esc(i.dose||"")}</span></div>`).join("");
@@ -713,6 +888,41 @@ const A = {
     const ids=Object.keys(S.todaySessions).filter(inRoom); if(!ids.length) return;
     S.confirmFn=()=>{ setCheckedOut(ids, true); closeSheet(); render(); toast("Room cleared. Everyone's history is saved."); };
     openSheet({type:"confirm", title:"Clear the room?", msg:`This checks out all ${ids.length} athletes for today. Their sessions stay saved in their history, and you can bring anyone back in.`, yes:"Clear room"});
+  },
+  startPlan(el){ openSheet({type:"startPlan", id:el.dataset.id}); },
+  pickPlan(el){
+    const aid=S.sheet.id; const src=el.dataset.src; let tpl={name:"", phases:[{name:"Phase 1", from:1, to:2, goals:"", exercises:[], criteria:[]}]};
+    if(src==="sug") tpl=SUGGESTED_PLANS.find(t=>t.id===el.dataset.t)||tpl; else if(src==="mine") tpl=(S.planTpls.list||[]).find(t=>t.id===el.dataset.t)||tpl;
+    const old=S.plans[aid]; const np=instantiatePlan(tpl);
+    if(old){ const past=[...(old.past||[])]; const o={...old}; delete o.past; past.push(o); np.past=past.slice(-10); }
+    S.plans[aid]=np; S.planOpen={}; closeSheet(); savePlan(aid, true);
+    S.planAid=aid; S.planBackTo=S.route; S.route={name:"plan"}; render(); window.scrollTo(0,0);
+    toast("Plan started. Set the start date to the injury or surgery date.");
+  },
+  openPlan(el){ S.planAid=el.dataset.id; S.planOpen={}; if(S.route.name!=="plan") S.planBackTo=S.route; S.route={name:"plan"}; render(); window.scrollTo(0,0); },
+  planBack(){ const b=S.planBackTo; S.route = (b && b.name!=="plan") ? b : {name:"athlete", id:S.planAid}; if(S.route.name==="session" && !S.edit) S.route={name:"athlete", id:S.planAid}; render(); window.scrollTo(0,0); },
+  phToggle(el){ const id=el.dataset.p; const p=S.plans[S.planAid]; const inf=planInfo(p); const cur=S.planOpen[id]!==undefined?S.planOpen[id]:(inf.ph&&inf.ph.id===id); S.planOpen[id]=!cur; render(); },
+  phAdd(){ const p=S.plans[S.planAid]; const last=(p.phases||[]).slice(-1)[0]; const from=last?Number(last.to)+1:1; const ph={id:uid(), name:"", from, to:from+3, goals:"", exercises:[], criteria:[]}; (p.phases=p.phases||[]).push(ph); S.planOpen[ph.id]=true; savePlan(S.planAid,true); render(); },
+  phMove(el){ const p=S.plans[S.planAid]; const a=p.phases; const i=a.findIndex(x=>x.id===el.dataset.p); const j=i+Number(el.dataset.dir); if(i<0||j<0||j>=a.length) return; [a[i],a[j]]=[a[j],a[i]]; savePlan(S.planAid,true); render(); },
+  phDel(el){ const pid=el.dataset.p; const p=S.plans[S.planAid]; const ph=p.phases.find(x=>x.id===pid);
+    S.confirmFn=()=>{ p.phases=p.phases.filter(x=>x.id!==pid); savePlan(S.planAid,true); closeSheet(); render(); };
+    openSheet({type:"confirm", title:"Delete phase?", msg:`“${(ph&&ph.name)||"This phase"}” and its exercises and criteria will be removed from the plan.`}); },
+  phAddEx(el){ S.planPhase=el.dataset.p; S.libSearch=""; openSheet({type:"lib"}); },
+  critAdd(el){ const pid=el.dataset.p; const f=$("crit-"+pid); const v=(f&&f.value||"").trim(); if(!v) return; const ph=S.plans[S.planAid].phases.find(x=>x.id===pid); (ph.criteria=ph.criteria||[]).push({id:uid(), text:v, met:false}); savePlan(S.planAid,true); render(); const nf=$("crit-"+pid); if(nf) nf.focus(); },
+  critToggle(el){ const ph=S.plans[S.planAid].phases.find(x=>x.id===el.dataset.p); const c=(ph.criteria||[]).find(x=>x.id===el.dataset.c); if(!c) return; c.met=!c.met; savePlan(S.planAid,true); render(); },
+  critDel(el){ const ph=S.plans[S.planAid].phases.find(x=>x.id===el.dataset.p); ph.criteria=(ph.criteria||[]).filter(x=>x.id!==el.dataset.c); savePlan(S.planAid,true); render(); },
+  planSaveTpl(){ openSheet({type:"planTplName"}); setTimeout(()=>{ const f=$("ptName"); if(f) f.focus(); },60); },
+  planTplSave(){ const name=($("ptName").value||"").trim(); if(!name){ toast("Give it a name"); return; } const t=planToTemplate(S.plans[S.planAid], name); const list=[...(S.planTpls.list||[]), t]; S.planTpls={...S.planTpls, list}; write("config/plantemplates", S.planTpls); closeSheet(); toast("Plan template saved"); },
+  delPlanTpl(el){ const id=el.dataset.t; const t=(S.planTpls.list||[]).find(x=>x.id===id); S.confirmFn=()=>{ const list=(S.planTpls.list||[]).filter(x=>x.id!==id); S.planTpls={...S.planTpls, list}; write("config/plantemplates", S.planTpls); closeSheet(); render(); toast("Plan template deleted"); };
+    openSheet({type:"confirm", title:"Delete plan template?", msg:`“${t?t.name:""}” will be removed. Athletes already using a plan made from it aren't changed.`}); },
+  planEnd(){ const aid=S.planAid; S.confirmFn=()=>{ const p=S.plans[aid]; p.active=false; p.endedAt=Date.now(); savePlan(aid,true); closeSheet(); S.route={name:"athlete", id:aid}; render(); toast("Plan ended. It's kept in their record."); };
+    openSheet({type:"confirm", title:"End this plan?", msg:"Use this when the athlete is cleared or the plan is finished. The plan is kept, and you can start a new one anytime.", yes:"End plan"}); },
+  reopenPlan(){ const p=S.plans[S.planAid]; p.active=true; delete p.endedAt; savePlan(S.planAid,true); render(); },
+  loadWeek(){
+    const e=S.edit; const pinf=planInfo(activePlan(e.aid), e.date); if(!pinf||!pinf.ph) return;
+    const have=new Set(e.doc.items.map(i=>i.name.toLowerCase())); let n=0;
+    (pinf.ph.exercises||[]).forEach(x=>{ if(!have.has(x.name.toLowerCase())){ e.doc.items.push({id:uid(), name:x.name, dose:x.dose||"", done:false}); n++; } });
+    if(n) saveSession(); render(); toast(n?`Added ${n} from week ${pinf.w} (${pinf.ph.name})`:"This week's exercises are already on the list");
   },
   lvTab(el){ S.lvTab=el.dataset.t; render(); },
   lvCat(el){ S.lvCat=el.dataset.c; render(); },
@@ -782,6 +992,7 @@ const A = {
       closeSheet();
       let sessions=[]; try{ const snap=await S.db.collection("sessions").where("athleteId","==",id).get(); sessions=snap.docs.map(d=>d.id); }catch(_){}
       sessions.forEach(sid=>remove("sessions/"+sid)); if(a.code){ remove("board/"+a.code); delete S.boards[a.code]; }
+      remove("plans/"+id); delete S.plans[id];
       remove("athletes/"+id); delete S.athletes[id]; delete S.todaySessions[id];
       S.route={name:"athletes"}; S.tab="athletes"; render(); toast("Deleted "+firstName(a.name));
     };
@@ -798,7 +1009,7 @@ const A = {
   libCat(el){ S.libCat=el.dataset.c; renderSheet(); },
   addEx(el){ addExercise(el.dataset.name, el.dataset.cat); },
   newEx(){ const name=S.libSearch.trim(); if(!name) return; const custom=[...(S.lib.custom||[]), {name, cat:"Mine"}]; S.lib={...S.lib, custom}; write("config/library", S.lib); S.libSearch=""; addExercise(name,"Mine"); },
-  openItem(el){ openSheet({type:"item", iid:el.dataset.i}); },
+  openItem(el){ if(el.dataset.p) S.planPhase=el.dataset.p; openSheet({type:"item", iid:el.dataset.i}); },
   setDose(el){ const it=curItem(); if(!it) return; it.dose=el.dataset.d; saveActive(); closeSheet(); render(); },
   customDose(){ const it=curItem(); const v=$("doseIn").value.trim(); if(!it||!v) return; it.dose=v; saveActive(); closeSheet(); render(); },
   moveItem(el){ const items=activeItems(); const i=items.findIndex(x=>x.id===S.sheet.iid); const j=i+Number(el.dataset.dir); if(i<0||j<0||j>=items.length) return; [items[i],items[j]]=[items[j],items[i]]; saveActive(); render(); },
@@ -881,13 +1092,16 @@ function setCheckedOut(ids, out){
     if(out && b && b.date===td && b.status==="help"){ const nb={...clone(b), status:"", statusAt:Date.now()}; S.boards[a.code]=nb; write("board/"+a.code, nb); }
   });
 }
+function phById(id){ const p=S.plans[S.planAid]; return p ? (p.phases||[]).find(x=>x.id===id) : null; }
 function keepExDraft(){ const n=$("exName"); if(n && S.sheet) S.sheet.draftName=n.value; const v=$("exVid"); if(v && S.sheet) S.sheet.video=v.value; const d=$("exDoseIn"); if(d && d.value.trim() && S.sheet) S.sheet.dose=d.value.trim(); }
 function editingTpl(){ return S.route.name==="tplEdit" && S.tplEdit && !S.tplEdit.builtin; }
-function activeItems(){ return editingTpl() ? S.tplEdit.items : (S.edit ? S.edit.doc.items : []); }
-function saveActive(){ if(editingTpl()) saveTplEdit(); else saveSession(); }
+function editingPhase(){ if(S.route.name!=="plan") return null; const p=S.plans[S.planAid]; return p ? (p.phases||[]).find(x=>x.id===S.planPhase)||null : null; }
+function activeItems(){ const ph=editingPhase(); if(ph) return (ph.exercises=ph.exercises||[]); return editingTpl() ? S.tplEdit.items : (S.edit ? S.edit.doc.items : []); }
+function saveActive(){ if(editingPhase()) savePlan(S.planAid, true); else if(editingTpl()) saveTplEdit(); else saveSession(); }
 function curItem(){ return S.sheet && activeItems().find(i=>i.id===S.sheet.iid); }
 function libDose(name, cat){ const d=(S.lib.doses||{})[String(name).toLowerCase()]; return d || defaultDose(cat||catOf(name)); }
 function addExercise(name, cat){
+  const ph=editingPhase(); if(ph){ (ph.exercises=ph.exercises||[]).push({id:uid(), name, dose:libDose(name,cat)}); savePlan(S.planAid, true); render(); toast("Added "+name); return; }
   if(editingTpl()){ S.tplEdit.items.push({id:uid(), name, dose:libDose(name,cat)}); saveTplEdit(); render(); toast("Added "+name); return; }
   const e=S.edit; if(!e) return;
   e.doc.items.push({id:uid(), name, dose:libDose(name,cat), done:false});
@@ -897,6 +1111,13 @@ const INPUTS = {
   athSearch(el){ S.search=el.value; const l=$("athList"); if(l) l.innerHTML=athListHTML(); },
   libSearch(el){ S.libSearch=el.value; const l=$("libList"); if(l) l.innerHTML=libListHTML(); },
   pickSearch(el){ S.pickSearch=el.value; const q=el.value.trim().toLowerCase(); const list=Object.values(S.athletes).filter(a=>!inRoom(a.id) && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name)); const l=$("pickList"); if(l) l.innerHTML=pickListHTML(list); },
+  planName(el){ const p=S.plans[S.planAid]; if(!p) return; p.name=el.value; savePlan(S.planAid); },
+  planStart(el){ const p=S.plans[S.planAid]; if(!p||!/^\d{4}-\d{2}-\d{2}$/.test(el.value)) return; p.start=el.value; savePlan(S.planAid, true); setTimeout(()=>{ if(!isTyping()) render(); else pending=true; },0); },
+  planNotes(el){ const p=S.plans[S.planAid]; if(!p) return; p.notes=el.value; savePlan(S.planAid); },
+  phName(el){ const ph=phById(el.dataset.p); if(!ph) return; ph.name=el.value; savePlan(S.planAid); },
+  phGoals(el){ const ph=phById(el.dataset.p); if(!ph) return; ph.goals=el.value; savePlan(S.planAid); },
+  phFrom(el){ const ph=phById(el.dataset.p); const v=parseInt(el.value,10); if(!ph||!(v>=1)) return; ph.from=v; if(Number(ph.to)<v) ph.to=v; savePlan(S.planAid); pending=true; },
+  phTo(el){ const ph=phById(el.dataset.p); const v=parseInt(el.value,10); if(!ph||!(v>=1)) return; ph.to=Math.max(v, Number(ph.from)||1); savePlan(S.planAid); pending=true; },
   lvSearch(el){ S.lvSearch=el.value; const l=$("lvList"); if(l) l.innerHTML=libViewListHTML(); },
   tplNameEdit(el){ if(!S.tplEdit) return; S.tplEdit.name=el.value; clearTimeout(INPUTS._tt); INPUTS._tt=setTimeout(saveTplEdit, 600); },
   note(el){ if(!S.edit) return; S.edit.doc.note=el.value; clearTimeout(INPUTS._t); INPUTS._t=setTimeout(saveSession, 700); }
@@ -904,7 +1125,7 @@ const INPUTS = {
 document.addEventListener("click", e=>{ if(e.target.closest("a[href]")) return; const el=e.target.closest("[data-act]"); if(!el) return; const f=A[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); } });
 document.addEventListener("input", e=>{ const el=e.target.closest("[data-in]"); if(el && INPUTS[el.dataset.in]) INPUTS[el.dataset.in](el,e); });
 document.addEventListener("keydown", e=>{ if(e.key!=="Enter") return; const id=e.target&&e.target.id;
-  if(id==="codeIn") A.stGo(); else if(id==="lPass"||id==="lEmail") A.doLogin(); else if(id==="doseIn") A.customDose(); else if(id==="vidIn") A.saveVideo(); else if(id==="exName"||id==="exVid"||id==="exDoseIn") A.saveEx(); else if(id==="tplName") A.saveTpl(); else if(id==="fName"||id==="fSport"||id==="fInj"){ const b=document.querySelector('[data-act="saveAth"]'); if(b) A.saveAth(b); }
+  if(id==="codeIn") A.stGo(); else if(id==="lPass"||id==="lEmail") A.doLogin(); else if(id==="doseIn") A.customDose(); else if(id==="vidIn") A.saveVideo(); else if(id==="exName"||id==="exVid"||id==="exDoseIn") A.saveEx(); else if(id==="ptName") A.planTplSave(); else if(id && id.startsWith("crit-")){ const b=document.querySelector(`[data-act="critAdd"][data-p="${id.slice(5)}"]`); if(b) A.critAdd(b); } else if(id==="tplName") A.saveTpl(); else if(id==="fName"||id==="fSport"||id==="fInj"){ const b=document.querySelector('[data-act="saveAth"]'); if(b) A.saveAth(b); }
   else if(e.target.dataset && e.target.dataset.in==="libSearch"){ const first=document.querySelector("#libList .lrow"); if(first){ e.preventDefault(); first.click(); } } });
 
 /* ---------- routing + start ---------- */
