@@ -194,7 +194,7 @@ const P = {
   layers:"M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5", save:"M6 3h12v18l-6-4-6 4z", search:"M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4-4",
   bell:"M6 9a6 6 0 1112 0c0 6 3 7 3 7H3s3-1 3-7M10 20a2 2 0 004 0", trash:"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13",
   today:"M4 6h16v14H4zM4 10h16M9 3v4M15 3v4", users:"M9 11a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M17 11a3 3 0 100-6M22 21c0-3-2-5-5-5.5",
-  edit:"M4 20h4L19 9l-4-4L4 16z", up:"M12 19V5M6 11l6-6 6 6", down:"M12 5v14M6 13l6 6 6-6", copy:"M9 9h11v11H9zM5 15H4V4h11v1", x:"M6 6l12 12M18 6L6 18", play:"M8 5v14l11-7z", eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z"
+  edit:"M4 20h4L19 9l-4-4L4 16z", up:"M12 19V5M6 11l6-6 6 6", down:"M12 5v14M6 13l6 6 6-6", copy:"M9 9h11v11H9zM5 15H4V4h11v1", x:"M6 6l12 12M18 6L6 18", play:"M8 5v14l11-7z", book:"M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 5v16M8 7h7", eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z"
 };
 const I = (n,w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${n==="more"?3.5:(w||2.2)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${P[n]}"/></svg>`;
 
@@ -266,9 +266,9 @@ document.addEventListener("focusout", ()=>setTimeout(()=>{ if(pending && !isTypi
 function render(){
   const r = S.route.name;
   const student = r==="student" || r==="code" || r==="login";
-  $("app").classList.toggle("nopad", student || r==="session");
+  $("app").classList.toggle("nopad", student || r==="session" || r==="tplEdit");
   $("barR").textContent = parseDate(today()).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
-  const showTabs = S.trainer && ["today","athletes","athlete"].includes(r);
+  const showTabs = S.trainer && ["today","athletes","athlete","library"].includes(r);
   const tabs = $("tabs"); tabs.classList.toggle("hidden", !showTabs);
   if(showTabs) tabs.innerHTML = tabsHTML();
   let html = "";
@@ -280,6 +280,8 @@ function render(){
   else if(r==="session") html = vSession();
   else if(r==="student") html = vStudent();
   else if(r==="code") html = vCode();
+  else if(r==="library") html = vLibrary();
+  else if(r==="tplEdit") html = vTplEdit();
   else if(r==="login") html = vLogin();
   if(S.trainer && !student && S.slow && !S.loadErr) html = `<div class="banner">Can't reach the saved data yet. What you see may be out of date.</div>` + html;
   $("view").innerHTML = html;
@@ -288,9 +290,10 @@ function render(){
 
 function tabsHTML(){
   const waiting = waitingList().length;
-  const t = S.route.name==="today" ? "today" : "athletes";
+  const r = S.route.name; const t = r==="today" ? "today" : (r==="library"||r==="tplEdit") ? "library" : "athletes";
   return `<button data-act="tab" data-tab="today" class="${t==="today"?"on":""}">${I("today")}Today${waiting?`<span class="badge">${waiting}</span>`:""}</button>
-          <button data-act="tab" data-tab="athletes" class="${t==="athletes"?"on":""}">${I("users")}Athletes</button>`;
+          <button data-act="tab" data-tab="athletes" class="${t==="athletes"?"on":""}">${I("users")}Athletes</button>
+          <button data-act="tab" data-tab="library" class="${t==="library"?"on":""}">${I("book")}Library</button>`;
 }
 
 /* ---------- trainer: data ---------- */
@@ -472,7 +475,7 @@ function vSession(){
   const items=e.doc.items; const done=items.filter(i=>i.done).length;
   const b=a.code&&S.boards[a.code]; const waiting=b&&b.date===e.date&&b.status==="help";
   let h=`<div class="row"><button class="btn sm ghost" data-act="back">${I("back")}Back</button><div class="grow"></div>${waiting?`<button class="btn sm gold" data-act="gotIt" data-code="${esc(a.code)}">Waiting · got it</button>`:""}</div>`;
-  h+=`<div class="mt" data-act="openAth" data-id="${e.aid}" style="cursor:pointer"><h1 style="margin-bottom:2px">${esc(a.name)}</h1><div class="sub">${esc(e.date===today()?"Today, "+fmtDate(e.date):fmtDate(e.date))} · ${esc(a.sport||"")} · ${done}/${items.length} done</div></div>`;
+  h+=`<div class="mt" data-act="openAth" data-id="${e.aid}" style="cursor:pointer"><h1 style="margin-bottom:2px">${esc(a.name)}</h1><div class="sub">${esc(e.date===today()?"Today, "+fmtDate(e.date):fmtDate(e.date))}${a.sport?" · "+esc(a.sport):""} · ${done}/${items.length} done</div></div>`;
   h+=`<div class="toolbar"><button class="btn sm" data-act="repeatLast">${I("repeat")}Repeat last</button><button class="btn sm" data-act="openTpl">${I("layers")}Templates</button>${items.length?`<button class="btn sm" data-act="openSaveTpl">${I("save")}Save as template</button>`:""}</div>`;
   h+=`<div class="mt">`;
   if(!items.length) h+=`<div class="empty small" style="padding:20px">No exercises yet. Tap <b style="display:inline;font-size:inherit;font-family:inherit;text-transform:none">Add exercise</b>, or repeat last session.</div>`;
@@ -486,6 +489,81 @@ function vSession(){
   return h;
 }
 
+/* ---------- library ---------- */
+function libCats(){ const c=Object.keys(DEFAULT_LIB); (S.lib.custom||[]).forEach(x=>{ const k=x.cat||"Mine"; if(!c.includes(k)) c.push(k); }); if(!c.includes("Mine")) c.push("Mine"); return c; }
+function isCustomEx(name){ const l=String(name).toLowerCase(); return (S.lib.custom||[]).some(x=>String(x.name).toLowerCase()===l); }
+function libViewListHTML(){
+  const q=(S.lvSearch||"").trim().toLowerCase(), cat=S.lvCat||"All";
+  const list=allExercises().filter(x=>(cat==="All"||x.cat===cat) && (!q||x.name.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));
+  if(!list.length) return `<div class="empty small">${q?"No exercise called that yet.":"No exercises here yet."}${q?`<div class="mt"><button class="btn sm primary" data-act="newExForm">${I("plus")}Create “${esc((S.lvSearch||"").trim())}”</button></div>`:""}</div>`;
+  return list.map(x=>{ const v=videoFor(x.name); return `<button class="lrow" data-act="exForm" data-name="${esc(x.name)}"><span class="grow"><span class="exname">${esc(x.name)}</span><div class="cat">${esc(x.cat)} · ${esc(libDose(x.name,x.cat))}${isCustomEx(x.name)?" · yours":""}</div></span>${v?`<span class="icon-btn vid" style="width:34px;height:34px">${I("play",2)}</span>`:""}<span class="muted" style="font-size:20px">›</span></button>`; }).join("");
+}
+function vLibrary(){
+  if(!S.ready) return `<div class="empty"><b>Loading…</b></div>`;
+  const tab=S.lvTab||"ex";
+  let h=`<h1>Library</h1><div class="sub">Your exercises, videos and templates. Set them up once, use them in every session.</div>`;
+  h+=`<div class="chips mt"><button class="chip ${tab==="ex"?"on":""}" data-act="lvTab" data-t="ex">Exercises (${allExercises().length})</button><button class="chip ${tab==="tpl"?"on":""}" data-act="lvTab" data-t="tpl">Templates (${BUILTIN_TPL.length+(S.templates.list||[]).length})</button></div>`;
+  if(tab==="ex"){
+    const cats=["All",...libCats()];
+    h+=`<div class="row mt"><input type="search" class="grow" placeholder="Search exercises" value="${esc(S.lvSearch||"")}" data-in="lvSearch"><button class="btn primary" data-act="newExForm">${I("plus")}New</button></div>`;
+    h+=`<div class="chips mt">${cats.map(c=>`<button class="chip ${(S.lvCat||"All")===c?"on":""}" data-act="lvCat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
+    h+=`<div class="card mt" style="padding:4px 12px" id="lvList">${libViewListHTML()}</div>`;
+  } else {
+    const mine=S.templates.list||[];
+    h+=`<button class="btn gold block mt" data-act="newTpl">${I("plus")}New template</button>`;
+    h+=`<div class="sec">Your templates</div>`;
+    h+= mine.length ? mine.map(t=>`<button class="arow" data-act="openTplEdit" data-t="${esc(t.id)}"><div class="avatar" style="font-size:15px">${I("layers")}</div><div class="grow"><div class="aname">${esc(t.name)}</div><div class="ameta">${t.items.length} exercise${t.items.length===1?"":"s"} · ${esc(t.items.slice(0,3).map(i=>i.name).join(", "))}${t.items.length>3?"…":""}</div></div></button>`).join("") : `<div class="empty small" style="padding:18px">No templates yet. Make one for the rehab plans you use most.</div>`;
+    h+=`<div class="sec">Starter templates</div>`;
+    h+=BUILTIN_TPL.map(t=>`<button class="arow" data-act="openTplEdit" data-t="${esc(t.id)}" style="opacity:.85"><div class="avatar" style="background:var(--g3);color:var(--g2);font-size:15px">${I("layers")}</div><div class="grow"><div class="aname">${esc(t.name)}</div><div class="ameta">${t.items.length} exercises · starter, copy it to make your own</div></div></button>`).join("");
+  }
+  return h;
+}
+function vTplEdit(){
+  const t=S.tplEdit; if(!t) return "";
+  const ro=!!t.builtin;
+  let h=`<div class="row"><button class="btn sm ghost" data-act="tplBack">${I("back")}Library</button><div class="grow"></div>${ro?"":`<span class="small muted">${t.name.trim()?"Saved automatically":"Name it to save"}</span>`}</div>`;
+  if(ro){
+    h+=`<h1 class="mt">${esc(t.name)}</h1><div class="banner">This is a starter template. Make a copy to change it.</div><button class="btn primary block" data-act="copyTpl">${I("copy")}Make a copy to edit</button>`;
+    h+=`<div class="mt">${t.items.map(i=>`<div class="ex"><div class="grow exname">${esc(i.name)}</div><span class="dose">${esc(i.dose||"")}</span></div>`).join("")}</div>`;
+    return h;
+  }
+  h+=`<label class="lbl" for="tplNameIn">Template name</label><input id="tplNameIn" placeholder="e.g. ACL week 3, Hamstring strain phase 1" value="${esc(t.name)}" data-in="tplNameEdit" style="font-weight:700;font-size:18px">`;
+  h+=`<div class="sec"><span>Exercises (${t.items.length})</span></div>`;
+  if(!t.items.length) h+=`<div class="empty small" style="padding:18px">Add the exercises for this plan. Tap the sets/reps to change them.</div>`;
+  h+=t.items.map(i=>`<div class="ex"><div class="grow exname">${esc(i.name)}</div>${videoFor(i.name)?`<a class="icon-btn vid" href="${esc(videoFor(i.name))}" target="_blank" rel="noopener" aria-label="Watch video">${I("play",2)}</a>`:""}<button class="dose" data-act="openItem" data-i="${esc(i.id)}">${esc(i.dose||"set")}</button><button class="icon-btn" data-act="openItem" data-i="${esc(i.id)}" aria-label="More">${I("more")}</button></div>`).join("");
+  h+=`<button class="btn gold block big-add" data-act="openLib">${I("plus")}Add exercise</button>`;
+  if(!t.isNew || (S.templates.list||[]).some(x=>x.id===t.id)) h+=`<button class="btn danger block mt" data-act="delTplEdit">${I("trash")}Delete template</button>`;
+  return h;
+}
+function saveTplEdit(){
+  const t=S.tplEdit; if(!t || t.builtin) return;
+  const name=t.name.trim(); if(!name) return;
+  const body={id:t.id, name, items:t.items.map(i=>({name:i.name, dose:i.dose||""}))};
+  const list=[...(S.templates.list||[])]; const i=list.findIndex(x=>x.id===t.id);
+  if(i>=0) list[i]=body; else list.push(body);
+  S.templates={...S.templates, list}; write("config/templates", S.templates);
+}
+function openTplEditor(t, builtin){
+  S.tplEdit={id:t.id, name:t.name, builtin:!!builtin, isNew:!!t.isNew, items:(t.items||[]).map(i=>({id:uid(), name:i.name, dose:i.dose||""}))};
+  S.route={name:"tplEdit"}; render(); window.scrollTo(0,0);
+}
+function exFormHTML(s){
+  const orig=s.name||""; const isNew=!orig; const custom=isNew||isCustomEx(orig);
+  const cat=s.cat || (orig?catOf(orig):(S.lvCat&&S.lvCat!=="All"?S.lvCat:"Mine"));
+  const dose=s.dose!==undefined ? s.dose : (orig?libDose(orig):"3×10");
+  const vid=s.video!==undefined ? s.video : (orig?videoFor(orig):"");
+  return `<div class="sheet-head"><h2>${isNew?"New exercise":esc(orig)}</h2><button class="icon-btn" data-act="closeSheet" aria-label="Close">${I("x")}</button></div>
+  <div class="sheet-body">
+    ${custom?`<label class="lbl" for="exName">Name</label><input id="exName" value="${esc(s.draftName!==undefined?s.draftName:orig)}" placeholder="e.g. Nordic hamstring curl" autocomplete="off">`:`<div class="small muted">Starter exercise. You can set its video and default sets/reps.</div>`}
+    <label class="lbl">Category</label><div class="chips wrap">${libCats().map(c=>`<button class="chip ${cat===c?"on":""}" data-act="exCat" data-c="${esc(c)}" ${custom?"":"disabled style=\"opacity:.5\""}>${esc(c)}</button>`).join("")}</div>
+    <label class="lbl">Default sets / reps / time</label><div class="chips wrap">${DOSES.map(d=>`<button class="chip ${dose===d?"on":""}" data-act="exDose" data-d="${esc(d)}">${esc(d)}</button>`).join("")}</div>
+    <input id="exDoseIn" class="mt" placeholder="Or type one, e.g. 3×12 @ 10 lb" value="${DOSES.includes(dose)?"":esc(dose)}">
+    <label class="lbl" for="exVid">Video link</label><input id="exVid" type="url" inputmode="url" placeholder="Paste a YouTube or video link" value="${esc(vid)}">
+    ${isUrl(vid)?`<a class="watch" href="${esc(vid)}" target="_blank" rel="noopener">${I("play",2)}Test the video</a>`:""}
+    ${(!isNew&&custom)?`<button class="btn sm danger mt" data-act="delEx">${I("trash")}Delete exercise</button>`:""}
+  </div><div class="sheet-foot"><button class="btn primary block" data-act="saveEx">${isNew?"Create exercise":"Save"}</button></div>`;
+}
+
 /* ---------- sheets ---------- */
 function openSheet(s){ S.sheet=s; renderSheet(); }
 function closeSheet(){ S.sheet=null; renderSheet(); }
@@ -497,7 +575,7 @@ function allExercises(){
 }
 function libListHTML(){
   const q=S.libSearch.trim().toLowerCase(); const cat=S.libCat;
-  const inSess=new Set(((S.edit&&S.edit.doc.items)||[]).map(i=>i.name.toLowerCase()));
+  const inSess=new Set(activeItems().map(i=>i.name.toLowerCase()));
   let list=allExercises().filter(x=>(cat==="All"||x.cat===cat) && (!q||x.name.toLowerCase().includes(q)));
   let h="";
   h+=list.map(x=>{ const on=inSess.has(x.name.toLowerCase()); return `<button class="lrow ${on?"added":""}" data-act="addEx" data-name="${esc(x.name)}" data-cat="${esc(x.cat)}"><span class="plus">${I(on?"check":"plus",3)}</span><span class="grow"><span class="exname">${esc(x.name)}</span>${cat==="All"?`<div class="cat">${esc(x.cat)}</div>`:""}</span></button>`; }).join("");
@@ -516,7 +594,7 @@ function renderSheet(){
     h=head("Add exercise")+`<div style="padding:0 18px"><input type="search" placeholder="Search or type a new one" value="${esc(S.libSearch)}" data-in="libSearch"><div class="chips mt">${cats.map(c=>`<button class="chip ${S.libCat===c?"on":""}" data-act="libCat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div></div>
       <div class="sheet-body" id="libList">${libListHTML()}</div><div class="sheet-foot"><button class="btn primary block" data-act="closeSheet">Done</button></div>`;
   } else if(s.type==="item"){
-    const it=S.edit&&S.edit.doc.items.find(i=>i.id===s.iid); if(!it){ S.sheet=null; return renderSheet(); }
+    const it=activeItems().find(i=>i.id===s.iid); if(!it){ S.sheet=null; return renderSheet(); }
     h=head(esc(it.name))+`<div class="sheet-body"><label class="lbl">Sets / reps / time</label><div class="chips wrap">${DOSES.map(d=>`<button class="chip ${it.dose===d?"on":""}" data-act="setDose" data-d="${esc(d)}">${esc(d)}</button>`).join("")}</div>
       <div class="row mt"><input id="doseIn" placeholder="Custom, e.g. 3×12 @ 10 lb" value="${DOSES.includes(it.dose)?"":esc(it.dose||"")}"><button class="btn primary" data-act="customDose">Set</button></div>
       <label class="lbl" for="vidIn">Exercise video</label>
@@ -546,6 +624,8 @@ function renderSheet(){
     h=head(esc(firstName(a.name))+"'s code")+`<div class="sheet-body"><div class="code">${esc(a.code)}</div><div class="qr mt" id="qrBox"></div>
       <div class="small muted center mt">Scan with the phone camera, or open the app and type the code. It only shows today's exercises.</div>
       ${APP_URL?`<div class="row mt"><button class="btn grow" data-act="copyLink" data-code="${esc(a.code)}">${I("copy")}Copy link</button><button class="btn grow" data-act="preview" data-code="${esc(a.code)}">${I("eye")}Preview</button></div>`:`<button class="btn block mt" data-act="preview" data-code="${esc(a.code)}">${I("eye")}Preview athlete view</button>`}</div>`;
+  } else if(s.type==="exForm"){
+    h=exFormHTML(s);
   } else if(s.type==="confirm"){
     h=head(esc(s.title))+`<div class="sheet-body"><p>${esc(s.msg)}</p></div><div class="sheet-foot row"><button class="btn grow" data-act="closeSheet">Cancel</button><button class="btn danger grow" data-act="confirmYes">${esc(s.yes||"Delete")}</button></div>`;
   }
@@ -621,7 +701,7 @@ function stWrite(body){ const st=S.student; st.board=body; rerender(); if(!st.re
 
 /* ---------- actions ---------- */
 const A = {
-  tab(el){ S.tab=el.dataset.tab; S.route={name:S.tab}; S.edit=null; render(); window.scrollTo(0,0); },
+  tab(el){ S.tab=el.dataset.tab; S.route={name:S.tab}; S.edit=null; S.tplEdit=null; render(); window.scrollTo(0,0); },
   openAth(el){ S.route={name:"athlete", id:el.dataset.id}; S.edit=null; render(); window.scrollTo(0,0); },
   openSess(el){ const id=el.dataset.id; if(el.dataset.reopen && S.todaySessions[id] && S.todaySessions[id].checkedOut) setCheckedOut([id], false); openSession(id, el.dataset.date || today()); },
   back(){ const p=S.prev; S.edit=null; S.route = (p && p.name!=="session") ? p : {name:S.tab}; render(); window.scrollTo(0,0); },
@@ -634,6 +714,46 @@ const A = {
     S.confirmFn=()=>{ setCheckedOut(ids, true); closeSheet(); render(); toast("Room cleared. Everyone's history is saved."); };
     openSheet({type:"confirm", title:"Clear the room?", msg:`This checks out all ${ids.length} athletes for today. Their sessions stay saved in their history, and you can bring anyone back in.`, yes:"Clear room"});
   },
+  lvTab(el){ S.lvTab=el.dataset.t; render(); },
+  lvCat(el){ S.lvCat=el.dataset.c; render(); },
+  newExForm(){ const q=(S.lvSearch||"").trim(); openSheet({type:"exForm", name:"", draftName: allExercises().some(x=>x.name.toLowerCase()===q.toLowerCase())?"":q}); setTimeout(()=>{ const f=$("exName"); if(f) f.focus(); },60); },
+  exForm(el){ openSheet({type:"exForm", name:el.dataset.name}); },
+  exCat(el){ keepExDraft(); S.sheet.cat=el.dataset.c; renderSheet(); },
+  exDose(el){ keepExDraft(); S.sheet.dose=el.dataset.d; const f=$("exDoseIn"); if(f) f.value=""; renderSheet(); },
+  saveEx(){
+    const s=S.sheet; const orig=s.name||""; const isNew=!orig; const custom=isNew||isCustomEx(orig);
+    const name = custom ? ($("exName").value||"").trim() : orig;
+    if(!name){ toast("Give the exercise a name"); return; }
+    const lower=name.toLowerCase(), olower=orig.toLowerCase();
+    if((isNew || lower!==olower) && allExercises().some(x=>x.name.toLowerCase()===lower)){ toast("There's already an exercise called that"); return; }
+    const cat = s.cat || (orig?catOf(orig):(S.lvCat&&S.lvCat!=="All"?S.lvCat:"Mine"));
+    const typed=($("exDoseIn").value||"").trim();
+    const dose = typed || (s.dose!==undefined ? s.dose : (orig?libDose(orig):"3×10"));
+    const vid=($("exVid").value||"").trim();
+    if(vid && !isUrl(vid)){ toast("Video link should start with https://"); return; }
+    // exercise list
+    let custom_list=[...(S.lib.custom||[])];
+    if(custom){ custom_list=custom_list.filter(x=>String(x.name).toLowerCase()!==olower); custom_list.push({name, cat}); }
+    const doses={...(S.lib.doses||{})}; delete doses[olower]; doses[lower]=dose;
+    S.lib={...S.lib, custom:custom_list, doses}; write("config/library", S.lib);
+    // video
+    const vids={...S.videos}; const before=vids[olower]||""; delete vids[olower]; if(vid) vids[lower]=vid;
+    if(JSON.stringify(vids)!==JSON.stringify(S.videos)){ S.videos=vids; write("config/videos",{map:vids}); refreshBoardsFor(name); if(olower&&olower!==lower) refreshBoardsFor(orig); }
+    closeSheet(); render(); toast(isNew?`Created ${name}`:"Saved");
+  },
+  delEx(){
+    const orig=S.sheet.name; if(!orig||!isCustomEx(orig)) return; const l=orig.toLowerCase();
+    S.confirmFn=()=>{ const custom=(S.lib.custom||[]).filter(x=>String(x.name).toLowerCase()!==l); const doses={...(S.lib.doses||{})}; delete doses[l]; S.lib={...S.lib, custom, doses}; write("config/library", S.lib);
+      if(S.videos[l]){ const v={...S.videos}; delete v[l]; S.videos=v; write("config/videos",{map:v}); }
+      closeSheet(); render(); toast("Deleted "+orig); };
+    openSheet({type:"confirm", title:"Delete "+orig+"?", msg:"It's removed from your library. Past sessions and templates that used it keep their copy."});
+  },
+  newTpl(){ openTplEditor({id:uid(), name:"", items:[], isNew:true}, false); setTimeout(()=>{ const f=$("tplNameIn"); if(f) f.focus(); },60); },
+  openTplEdit(el){ const id=el.dataset.t; const b=BUILTIN_TPL.find(x=>x.id===id); if(b) return openTplEditor(b, true); const t=(S.templates.list||[]).find(x=>x.id===id); if(t) openTplEditor(t, false); },
+  copyTpl(){ const t=S.tplEdit; openTplEditor({id:uid(), name:t.name+" (my copy)", items:t.items, isNew:true}, false); saveTplEdit(); toast("Copy saved. Edit away."); },
+  tplBack(){ if(S.tplEdit && !S.tplEdit.builtin && !S.tplEdit.name.trim() && S.tplEdit.items.length){ toast("Give the template a name so it saves"); const f=$("tplNameIn"); if(f) f.focus(); return; } S.tplEdit=null; S.lvTab="tpl"; S.route={name:"library"}; render(); window.scrollTo(0,0); },
+  delTplEdit(){ const t=S.tplEdit; S.confirmFn=()=>{ const list=(S.templates.list||[]).filter(x=>x.id!==t.id); S.templates={...S.templates, list}; write("config/templates", S.templates); closeSheet(); S.tplEdit=null; S.lvTab="tpl"; S.route={name:"library"}; render(); toast("Template deleted"); };
+    openSheet({type:"confirm", title:"Delete template?", msg:`“${t.name||"Untitled"}” will be removed. Sessions that already used it aren't changed.`}); },
   openPick(){ S.pickSearch=""; openSheet({type:"pick"}); },
   pickAth(el){ closeSheet(); const id=el.dataset.id; if(S.todaySessions[id] && S.todaySessions[id].checkedOut) setCheckedOut([id], false); openSession(id, today()); },
   newAth(){ openSheet({type:"athForm", id:"", from:S.sheet&&S.sheet.type}); setTimeout(()=>{ const f=$("fName"); if(f) f.focus(); },50); },
@@ -679,10 +799,10 @@ const A = {
   addEx(el){ addExercise(el.dataset.name, el.dataset.cat); },
   newEx(){ const name=S.libSearch.trim(); if(!name) return; const custom=[...(S.lib.custom||[]), {name, cat:"Mine"}]; S.lib={...S.lib, custom}; write("config/library", S.lib); S.libSearch=""; addExercise(name,"Mine"); },
   openItem(el){ openSheet({type:"item", iid:el.dataset.i}); },
-  setDose(el){ const it=curItem(); if(!it) return; it.dose=el.dataset.d; saveSession(); closeSheet(); render(); },
-  customDose(){ const it=curItem(); const v=$("doseIn").value.trim(); if(!it||!v) return; it.dose=v; saveSession(); closeSheet(); render(); },
-  moveItem(el){ const items=S.edit.doc.items; const i=items.findIndex(x=>x.id===S.sheet.iid); const j=i+Number(el.dataset.dir); if(i<0||j<0||j>=items.length) return; [items[i],items[j]]=[items[j],items[i]]; saveSession(); render(); },
-  removeItem(){ const items=S.edit.doc.items; const i=items.findIndex(x=>x.id===S.sheet.iid); if(i<0) return; const [gone]=items.splice(i,1); saveSession(); closeSheet(); render(); toast("Removed "+gone.name); },
+  setDose(el){ const it=curItem(); if(!it) return; it.dose=el.dataset.d; saveActive(); closeSheet(); render(); },
+  customDose(){ const it=curItem(); const v=$("doseIn").value.trim(); if(!it||!v) return; it.dose=v; saveActive(); closeSheet(); render(); },
+  moveItem(el){ const items=activeItems(); const i=items.findIndex(x=>x.id===S.sheet.iid); const j=i+Number(el.dataset.dir); if(i<0||j<0||j>=items.length) return; [items[i],items[j]]=[items[j],items[i]]; saveActive(); render(); },
+  removeItem(){ const items=activeItems(); const i=items.findIndex(x=>x.id===S.sheet.iid); if(i<0) return; const [gone]=items.splice(i,1); saveActive(); closeSheet(); render(); toast("Removed "+gone.name); },
   saveVideo(){
     const it=curItem(); const v=($("vidIn").value||"").trim(); if(!it) return;
     if(!isUrl(v)){ toast("Paste a full link starting with https://"); return; }
@@ -761,22 +881,30 @@ function setCheckedOut(ids, out){
     if(out && b && b.date===td && b.status==="help"){ const nb={...clone(b), status:"", statusAt:Date.now()}; S.boards[a.code]=nb; write("board/"+a.code, nb); }
   });
 }
-function curItem(){ return S.edit && S.sheet && S.edit.doc.items.find(i=>i.id===S.sheet.iid); }
+function keepExDraft(){ const n=$("exName"); if(n && S.sheet) S.sheet.draftName=n.value; const v=$("exVid"); if(v && S.sheet) S.sheet.video=v.value; const d=$("exDoseIn"); if(d && d.value.trim() && S.sheet) S.sheet.dose=d.value.trim(); }
+function editingTpl(){ return S.route.name==="tplEdit" && S.tplEdit && !S.tplEdit.builtin; }
+function activeItems(){ return editingTpl() ? S.tplEdit.items : (S.edit ? S.edit.doc.items : []); }
+function saveActive(){ if(editingTpl()) saveTplEdit(); else saveSession(); }
+function curItem(){ return S.sheet && activeItems().find(i=>i.id===S.sheet.iid); }
+function libDose(name, cat){ const d=(S.lib.doses||{})[String(name).toLowerCase()]; return d || defaultDose(cat||catOf(name)); }
 function addExercise(name, cat){
+  if(editingTpl()){ S.tplEdit.items.push({id:uid(), name, dose:libDose(name,cat)}); saveTplEdit(); render(); toast("Added "+name); return; }
   const e=S.edit; if(!e) return;
-  e.doc.items.push({id:uid(), name, dose:defaultDose(cat||catOf(name)), done:false});
+  e.doc.items.push({id:uid(), name, dose:libDose(name,cat), done:false});
   saveSession(); render(); toast("Added "+name);
 }
 const INPUTS = {
   athSearch(el){ S.search=el.value; const l=$("athList"); if(l) l.innerHTML=athListHTML(); },
   libSearch(el){ S.libSearch=el.value; const l=$("libList"); if(l) l.innerHTML=libListHTML(); },
   pickSearch(el){ S.pickSearch=el.value; const q=el.value.trim().toLowerCase(); const list=Object.values(S.athletes).filter(a=>!inRoom(a.id) && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name)); const l=$("pickList"); if(l) l.innerHTML=pickListHTML(list); },
+  lvSearch(el){ S.lvSearch=el.value; const l=$("lvList"); if(l) l.innerHTML=libViewListHTML(); },
+  tplNameEdit(el){ if(!S.tplEdit) return; S.tplEdit.name=el.value; clearTimeout(INPUTS._tt); INPUTS._tt=setTimeout(saveTplEdit, 600); },
   note(el){ if(!S.edit) return; S.edit.doc.note=el.value; clearTimeout(INPUTS._t); INPUTS._t=setTimeout(saveSession, 700); }
 };
 document.addEventListener("click", e=>{ if(e.target.closest("a[href]")) return; const el=e.target.closest("[data-act]"); if(!el) return; const f=A[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); } });
 document.addEventListener("input", e=>{ const el=e.target.closest("[data-in]"); if(el && INPUTS[el.dataset.in]) INPUTS[el.dataset.in](el,e); });
 document.addEventListener("keydown", e=>{ if(e.key!=="Enter") return; const id=e.target&&e.target.id;
-  if(id==="codeIn") A.stGo(); else if(id==="lPass"||id==="lEmail") A.doLogin(); else if(id==="doseIn") A.customDose(); else if(id==="vidIn") A.saveVideo(); else if(id==="tplName") A.saveTpl(); else if(id==="fName"||id==="fSport"||id==="fInj"){ const b=document.querySelector('[data-act="saveAth"]'); if(b) A.saveAth(b); }
+  if(id==="codeIn") A.stGo(); else if(id==="lPass"||id==="lEmail") A.doLogin(); else if(id==="doseIn") A.customDose(); else if(id==="vidIn") A.saveVideo(); else if(id==="exName"||id==="exVid"||id==="exDoseIn") A.saveEx(); else if(id==="tplName") A.saveTpl(); else if(id==="fName"||id==="fSport"||id==="fInj"){ const b=document.querySelector('[data-act="saveAth"]'); if(b) A.saveAth(b); }
   else if(e.target.dataset && e.target.dataset.in==="libSearch"){ const first=document.querySelector("#libList .lrow"); if(first){ e.preventDefault(); first.click(); } } });
 
 /* ---------- routing + start ---------- */
