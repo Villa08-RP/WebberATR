@@ -247,6 +247,13 @@ const firstName = n => String(n||"").trim().split(/\s+/)[0] || "Athlete";
 const initials = n => String(n||"?").trim().split(/\s+/).slice(0,2).map(p=>p[0]||"").join("").toUpperCase();
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 function newCode(){ const used=new Set(Object.values(S.athletes).map(a=>a.code)); let c; do{c="";for(let i=0;i<5;i++)c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)];}while(used.has(c)); return c; }
+// Codes are shared by every trainer, so make sure no other trainer already uses it.
+async function uniqueCode(){
+  for(let i=0;i<8;i++){ const c=newCode(); try{ const d=await S.db.doc("board/"+c).get(); if(!d.exists) return c; }catch(_){ return c; } }
+  return newCode();
+}
+// Reserve the code right away so no other trainer can get the same one.
+function reserveCode(a){ if(!a.code) return; const b={trainerUid:S.uid, first:firstName(a.name), date:"", items:[], status:"", statusAt:0, pain:null, plan:null, updatedAt:Date.now()}; S.boards[a.code]=b; write("board/"+a.code, b); }
 function catOf(name){ const l=name.toLowerCase(); for(const c in DEFAULT_LIB){ if(DEFAULT_LIB[c].some(x=>x.toLowerCase()===l)) return c; } const m=(S.lib.custom||[]).find(x=>x.name.toLowerCase()===l); return m?m.cat:"Mine"; }
 const defaultDose = cat => cat==="Cardio & recovery" ? "10 min" : "3×10";
 const videoFor = name => (S.videos && S.videos[String(name||"").toLowerCase()]) || "";
@@ -281,6 +288,9 @@ const S = {
 };
 
 /* ---------- writes: one at a time per document ---------- */
+// Each trainer's data lives in their own space: trainers/{their uid}/...
+// Only "board/" (what athletes see via their code) is shared, and each board is tagged with its trainer.
+const full = p => p.startsWith("board/") ? p : "trainers/"+S.uid+"/"+p;
 const W = {};
 const isBusy = p => !!(W[p] && (W[p].busy || W[p].next));
 function write(path, data){
@@ -302,7 +312,7 @@ async function flush(path){
     const job = w.next; w.next = null;
     for(let attempt=0; attempt<2; attempt++){
       try{
-        if(job.op==="delete") await S.db.doc(path).delete(); else await S.db.doc(path).set(job.body);
+        if(job.op==="delete") await S.db.doc(full(path)).delete(); else await S.db.doc(full(path)).set(job.body);
         break;
       }catch(e){
         const code = e && e.code;
@@ -369,27 +379,27 @@ function startTrainerSubs(){
   const t = setTimeout(()=>{ if(!S.confirmed){ S.slow=true; rerender(); } }, 10000);
   const ok = snap => { if(!snap.metadata.fromCache){ clearTimeout(t); S.confirmed=true; if(S.slow){S.slow=false;} } };
   const fail = e => { clearTimeout(t); S.loadErr = (e&&e.code)||"error"; S.ready=true; rerender(); };
-  db.collection("athletes").onSnapshot(snap=>{
+  db.collection(full("athletes")).onSnapshot(snap=>{
     ok(snap); const o={}; snap.docs.forEach(d=>{ o[d.id]={...d.data(), id:d.id}; }); S.athletes=o; S.ready=true; syncBoards(); rerender();
   }, fail);
-  db.collection("sessions").where("date","==",td).onSnapshot(snap=>{
+  db.collection(full("sessions")).where("date","==",td).onSnapshot(snap=>{
     const o={}; snap.docs.forEach(d=>{ const v=d.data(); if(v && v.athleteId) o[v.athleteId]={...v, id:d.id}; });
     S.todaySessions=o; adoptRemote(o); syncBoards(); rerender();
   }, fail);
-  db.collection("board").onSnapshot(snap=>{
+  db.collection("board").where("trainerUid","==",S.uid).onSnapshot(snap=>{
     const o={}; snap.docs.forEach(d=>{ o[d.id]={...d.data()}; }); S.boards=o; syncBoards(); rerender();
   }, fail);
-  db.doc("config/library").onSnapshot(d=>{ S.lib = d.exists ? {custom:[], ...d.data()} : {custom:[]}; rerender(); }, ()=>{});
-  db.doc("config/videos").onSnapshot(d=>{ S.videos = (d.exists && d.data().map) ? {...d.data().map} : {}; rerender(); }, ()=>{});
-  db.collection("plans").onSnapshot(snap=>{ const o={}; snap.docs.forEach(d=>{ o[d.id]=d.data(); }); S.plans=o; rerender(); }, ()=>{});
-  db.doc("config/plantemplates").onSnapshot(d=>{ S.planTpls = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
-  db.doc("config/templates").onSnapshot(d=>{ S.templates = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
+  db.doc(full("config/library")).onSnapshot(d=>{ S.lib = d.exists ? {custom:[], ...d.data()} : {custom:[]}; rerender(); }, ()=>{});
+  db.doc(full("config/videos")).onSnapshot(d=>{ S.videos = (d.exists && d.data().map) ? {...d.data().map} : {}; rerender(); }, ()=>{});
+  db.collection(full("plans")).onSnapshot(snap=>{ const o={}; snap.docs.forEach(d=>{ o[d.id]=d.data(); }); S.plans=o; rerender(); }, ()=>{});
+  db.doc(full("config/plantemplates")).onSnapshot(d=>{ S.planTpls = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
+  db.doc(full("config/templates")).onSnapshot(d=>{ S.templates = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
   setInterval(()=>{ if(S.route.name==="today") rerender(); }, 30000);
   S.subDate=td;
 }
 function ensureHistory(aid){
   if(!S.db || S.histSubs[aid]) return;
-  S.histSubs[aid] = S.db.collection("sessions").where("athleteId","==",aid).onSnapshot(snap=>{
+  S.histSubs[aid] = S.db.collection(full("sessions")).where("athleteId","==",aid).onSnapshot(snap=>{
     S.history[aid] = snap.docs.map(d=>({...d.data(), id:d.id})).filter(s=>s.date).sort((a,b)=>b.date.localeCompare(a.date));
     const e = S.edit;
     if(e && e.aid===aid && e.date!==today()){ const r=S.history[aid].find(s=>s.date===e.date); if(r) adoptOne(r); }
@@ -437,7 +447,7 @@ function pushBoard(aid, d, force){
   if(status==="done" && items.some(i=>!i.done)) status="";
   const pinf=planInfo(activePlan(aid), d.date);
   const plan = pinf && pinf.w>0 && pinf.w<=pinf.n ? {week:pinf.w, weeks:pinf.n, phase:pinf.ph?pinf.ph.name:"", goals:goalsList(pinf.ph).slice(0,4)} : null;
-  const body={first:firstName(a.name), date:d.date, items, status, statusAt: same?(prev.statusAt||0):0, pain: same?(prev.pain===undefined?null:prev.pain):null, plan, updatedAt:Date.now()};
+  const body={trainerUid:S.uid, first:firstName(a.name), date:d.date, items, status, statusAt: same?(prev.statusAt||0):0, pain: same?(prev.pain===undefined?null:prev.pain):null, plan, updatedAt:Date.now()};
   S.boards[a.code]=body; write("board/"+a.code, body);
 }
 function saveSession(force){
@@ -968,21 +978,21 @@ const A = {
   pickAth(el){ closeSheet(); const id=el.dataset.id; if(S.todaySessions[id] && S.todaySessions[id].checkedOut) setCheckedOut([id], false); openSession(id, today()); },
   newAth(){ openSheet({type:"athForm", id:"", from:S.sheet&&S.sheet.type}); setTimeout(()=>{ const f=$("fName"); if(f) f.focus(); },50); },
   editAth(el){ openSheet({type:"athForm", id:el.dataset.id}); },
-  saveAth(el){
+  async saveAth(el){
     const name=$("fName").value.trim(), sport=$("fSport").value.trim(), injury=$("fInj").value.trim();
     if(!name){ toast("Add a name first"); $("fName").focus(); return; }
     const id=el.dataset.id;
     if(id){ const a={...S.athletes[id], name, sport, injury}; S.athletes[id]=a; write("athletes/"+id, a); if(S.todaySessions[id] && a.code && S.boards[a.code]){ const b={...clone(S.boards[a.code]), first:firstName(name)}; S.boards[a.code]=b; write("board/"+a.code,b); } closeSheet(); render(); toast("Saved"); return; }
-    const nid=uid(); const a={id:nid, name, sport, injury, code:newCode(), createdAt:Date.now(), lastVisit:""};
-    S.athletes[nid]=a; write("athletes/"+nid, a);
+    const nid=uid(); const a={id:nid, name, sport, injury, code:await uniqueCode(), createdAt:Date.now(), lastVisit:""};
+    S.athletes[nid]=a; write("athletes/"+nid, a); reserveCode(a);
     const from=S.sheet&&S.sheet.from; closeSheet();
     if(from==="pick" || S.route.name==="today"){ openSession(nid, today()); toast("Added "+firstName(name)); }
     else { S.route={name:"athlete", id:nid}; render(); toast("Added "+firstName(name)); }
   },
   resetCode(el){
     const id=el.dataset.id; const a=S.athletes[id]; if(!a) return;
-    S.confirmFn=()=>{ const old=a.code; const code=newCode(); const na={...a, code}; S.athletes[id]=na; write("athletes/"+id, na);
-      const b=S.boards[old]; if(b){ S.boards[code]=clone(b); write("board/"+code, b); remove("board/"+old); delete S.boards[old]; }
+    S.confirmFn=async ()=>{ const old=a.code; const code=await uniqueCode(); const na={...a, code}; S.athletes[id]=na; write("athletes/"+id, na);
+      const b=S.boards[old]; if(b){ const nb={...clone(b), trainerUid:S.uid}; S.boards[code]=nb; write("board/"+code, nb); remove("board/"+old); delete S.boards[old]; } else reserveCode(na);
       closeSheet(); render(); toast("New code: "+code); };
     openSheet({type:"confirm", title:"New code?", msg:"The old code and QR stop working. Give "+firstName(a.name)+" the new one.", yes:"Make new code"});
   },
@@ -990,7 +1000,7 @@ const A = {
     const id=el.dataset.id; const a=S.athletes[id]; if(!a) return;
     S.confirmFn=async ()=>{
       closeSheet();
-      let sessions=[]; try{ const snap=await S.db.collection("sessions").where("athleteId","==",id).get(); sessions=snap.docs.map(d=>d.id); }catch(_){}
+      let sessions=[]; try{ const snap=await S.db.collection(full("sessions")).where("athleteId","==",id).get(); sessions=snap.docs.map(d=>d.id); }catch(_){}
       sessions.forEach(sid=>remove("sessions/"+sid)); if(a.code){ remove("board/"+a.code); delete S.boards[a.code]; }
       remove("plans/"+id); delete S.plans[id];
       remove("athletes/"+id); delete S.athletes[id]; delete S.todaySessions[id];
@@ -1160,6 +1170,7 @@ function waitBackend(){
   be.onAuth(u=>{
     const wasTrainer=S.trainer;
     S.authEmail = u ? u.email : "";
+    S.uid = u ? u.uid : "";
     S.trainer = !!u && be.isTrainer(u.email);
     if(wasTrainer && !S.trainer){ location.reload(); return; }
     if(S.trainer && !S.subsStarted){ S.subsStarted=true; startTrainerSubs(); }

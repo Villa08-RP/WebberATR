@@ -58,7 +58,8 @@ try {
 
   window.ATR = {
     db: { doc: docRef, collection: p => makeQuery(p, []) },
-    onAuth: cb => onAuthStateChanged(auth, u => cb(u ? { email: (u.email || "").toLowerCase() } : null)),
+    // uid = the trainer's unique Firebase ID. It decides which workspace they see.
+    onAuth: cb => onAuthStateChanged(auth, u => cb(u ? { email: (u.email || "").toLowerCase(), uid: u.uid } : null)),
     isTrainer: email => !!email && trainers.includes(String(email).trim().toLowerCase()),
     signIn: (email, pass) => signInWithEmailAndPassword(auth, String(email).trim(), pass),
     signOut: () => signOut(auth)

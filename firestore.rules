@@ -1,29 +1,34 @@
 rules_version = '2';
-
-// Webber ATR security rules.
-// Paste this whole file into Firebase console → Firestore Database → Rules, then Publish.
-// Change the email(s) below to match trainerEmails in config.js (lowercase).
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Same list as trainerEmails in config.js. Add a new trainer's email here too.
     function isTrainer() {
-      return request.auth != null
-        && request.auth.token.email in ['felipevillar02@gmail.com'];
+      return request.auth != null && request.auth.token.email.lower() in [
+        "johnsondm2@webber.edu",
+        "felipepinto@gmail.com",
+        "felipevillar02@gmail.com"
+      ];
     }
 
-    // Trainer: full access to athletes, history, templates and settings.
-    match /{document=**} {
-      allow read, write: if isTrainer();
+    // Each trainer's own workspace: athletes, sessions, plans, library, templates.
+    // Only that trainer can read or write it.
+    match /trainers/{trainerId}/{document=**} {
+      allow read, write: if isTrainer() && request.auth.uid == trainerId;
     }
 
-    // Athlete "today" lists. Anyone with the exact code can open one list
-    // (no browsing other athletes), and can only check off exercises,
-    // ask for the trainer, and send a pain rating.
+    // Athlete boards (what an athlete sees after scanning their QR code).
     match /board/{code} {
+      // Anyone with the exact code can open that one board (athletes don't log in).
       allow get: if true;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys()
-                      .hasOnly(['items', 'status', 'statusAt', 'pain', 'updatedAt']);
+      // A trainer can only list their own athletes' boards.
+      allow list: if isTrainer() && resource.data.trainerUid == request.auth.uid;
+      // Only a signed-in trainer can create a board, tagged with their own ID.
+      allow create: if isTrainer() && request.resource.data.trainerUid == request.auth.uid;
+      // Athletes can check off exercises, but nobody can move a board to another trainer.
+      allow update: if request.resource.data.trainerUid == resource.data.trainerUid;
+      // Only the board's trainer can delete it.
+      allow delete: if isTrainer() && resource.data.trainerUid == request.auth.uid;
     }
   }
 }
