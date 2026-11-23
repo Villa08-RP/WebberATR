@@ -95,6 +95,8 @@ label.lbl{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;text
 .wait-card{background:var(--gold);color:#1d1606;border-radius:var(--r);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
 .wait-card b{font-size:17px}
 .arow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.out-btn{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:58px;min-height:58px;border-radius:12px;background:var(--g3);color:var(--g);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.out-btn svg{width:20px;height:20px}
 .avatar{width:44px;height:44px;border-radius:50%;background:var(--g);color:var(--gold);display:grid;place-items:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;flex:none}
 .aname{font-weight:700;font-size:17px;line-height:1.2}
 .ameta{font-size:14px;color:var(--mute);margin-top:2px}
@@ -311,6 +313,7 @@ function startTrainerSubs(){
   db.doc("config/videos").onSnapshot(d=>{ S.videos = (d.exists && d.data().map) ? {...d.data().map} : {}; rerender(); }, ()=>{});
   db.doc("config/templates").onSnapshot(d=>{ S.templates = d.exists ? {list:[], ...d.data()} : {list:[]}; rerender(); }, ()=>{});
   setInterval(()=>{ if(S.route.name==="today") rerender(); }, 30000);
+  S.subDate=td;
 }
 function ensureHistory(aid){
   if(!S.db || S.histSubs[aid]) return;
@@ -333,7 +336,7 @@ function adoptOne(remote){
 }
 function waitingList(){
   const td=today(); const out=[];
-  for(const aid in S.todaySessions){ const a=S.athletes[aid]; if(!a) continue; const b=S.boards[a.code]; if(b && b.date===td && b.status==="help") out.push({a,b}); }
+  for(const aid in S.todaySessions){ if(!inRoom(aid)) continue; const a=S.athletes[aid]; const b=S.boards[a.code]; if(b && b.date===td && b.status==="help") out.push({a,b}); }
   return out.sort((x,y)=>(x.b.statusAt||0)-(y.b.statusAt||0));
 }
 // Copy athlete check-offs and pain rating from their board into the trainer's record.
@@ -400,22 +403,29 @@ function statusOf(aid){
   const rank = (b&&b.date===td&&b.status==="help")?0 : (items.length&&done===items.length)?3 : done>0?1:2;
   return {items, done, tag, rank};
 }
+function inRoom(id){ const s=S.todaySessions[id]; return !!(s && !s.checkedOut && S.athletes[id]); }
 function vToday(){
   if(!S.ready) return `<div class="empty"><b>Loading…</b></div>`;
-  const ids=Object.keys(S.todaySessions).filter(id=>S.athletes[id]);
+  const ids=Object.keys(S.todaySessions).filter(inRoom);
+  const outIds=Object.keys(S.todaySessions).filter(id=>S.athletes[id] && S.todaySessions[id].checkedOut);
   const waiting=waitingList();
   const rows=ids.map(id=>({id, a:S.athletes[id], st:statusOf(id)})).sort((x,y)=>x.st.rank-y.st.rank || x.a.name.localeCompare(y.a.name));
-  let h=`<h1>Today</h1><div class="sub">${ids.length} athlete${ids.length===1?"":"s"} in the room${waiting.length?` · <b style="color:#8a6300">${waiting.length} waiting</b>`:""}</div>`;
+  let h=`<h1>Today</h1><div class="sub">${ids.length} athlete${ids.length===1?"":"s"} in the room${waiting.length?` · <b style="color:#8a6300">${waiting.length} waiting</b>`:""}${outIds.length?` · ${outIds.length} done for today`:""}</div>`;
   if(waiting.length){
     h+=`<div class="sec">Needs you</div>`;
     h+=waiting.map(({a,b})=>{ const m=Math.max(0,Math.round((Date.now()-(b.statusAt||Date.now()))/60000));
       return `<div class="wait-card"><div class="grow" data-act="openSess" data-id="${a.id}" style="cursor:pointer"><b>${esc(a.name)}</b><div class="small">${esc(a.sport||"")} · waiting ${m<1?"just now":m+" min"}</div></div><button class="btn sm primary" data-act="gotIt" data-code="${esc(a.code)}">Got it</button></div>`; }).join("");
   }
-  h+=`<div class="sec"><span>In the room</span></div>`;
-  if(!rows.length) h+=`<div class="empty"><b>Nobody yet</b>Add an athlete when they walk in. You can repeat their last session in one tap.</div>`;
+  h+=`<div class="sec"><span>In the room</span>${rows.length>1?`<button class="btn sm ghost" data-act="clearRoom">Clear room</button>`:""}</div>`;
+  if(!rows.length) h+=`<div class="empty"><b>${outIds.length?"Room is clear":"Nobody yet"}</b>Add an athlete when they walk in. You can repeat their last session in one tap.</div>`;
   h+=rows.map(({id,a,st})=>{ const pct=st.items.length?Math.round(st.done/st.items.length*100):0;
-    return `<button class="arow" data-act="openSess" data-id="${id}"><div class="avatar">${esc(initials(a.name))}</div><div class="grow"><div class="row"><div class="aname grow">${esc(a.name)}</div>${st.tag}</div><div class="ameta">${esc(a.sport||"")}${a.injury?" · "+esc(a.injury):""} · ${st.done}/${st.items.length} done</div><div class="prog"><i style="width:${pct}%"></i></div></div></button>`; }).join("");
+    return `<div class="arow"><button class="row grow" style="text-align:left;gap:12px;min-width:0" data-act="openSess" data-id="${id}"><div class="avatar">${esc(initials(a.name))}</div><div class="grow" style="min-width:0"><div class="row"><div class="aname grow">${esc(a.name)}</div>${st.tag}</div><div class="ameta">${esc(a.sport||"")}${a.injury?" · "+esc(a.injury):""} · ${st.done}/${st.items.length} done</div><div class="prog"><i style="width:${pct}%"></i></div></div></button><button class="out-btn" data-act="checkOut" data-id="${id}" aria-label="Done for today, check out ${esc(a.name)}">${I("check",3)}<span>Done</span></button></div>`; }).join("");
   h+=`<button class="btn gold block mt" data-act="openPick">${I("plus")}Add athlete to today</button>`;
+  if(outIds.length){
+    h+=`<div class="sec"><span>Done for today (${outIds.length})</span><button class="btn sm ghost" data-act="toggleOut">${S.showOut?"Hide":"Show"}</button></div>`;
+    if(S.showOut) h+=outIds.map(id=>{ const a=S.athletes[id], s=S.todaySessions[id]; const items=s.items||[]; const done=items.filter(i=>i.done).length;
+      return `<div class="arow" style="opacity:.75"><button class="row grow" style="text-align:left;gap:12px;min-width:0" data-act="openSess" data-id="${id}"><div class="avatar" style="background:var(--g3);color:var(--g2)">${esc(initials(a.name))}</div><div class="grow" style="min-width:0"><div class="aname">${esc(a.name)}</div><div class="ameta">${done}/${items.length} done${s.pain!=null&&s.pain!==""?` · pain ${esc(s.pain)}/10`:""}</div></div></button><button class="btn sm" data-act="checkIn" data-id="${id}">Back in</button></div>`; }).join("");
+  }
   return h;
 }
 function sportsList(){ return [...new Set(Object.values(S.athletes).map(a=>a.sport).filter(Boolean))].sort(); }
@@ -442,10 +452,10 @@ function vAthlete(id){
   if(!a) return S.ready ? `<div class="empty"><b>Athlete not found</b><button class="btn mt" data-act="tab" data-tab="athletes">Back to athletes</button></div>` : `<div class="empty"><b>Loading…</b></div>`;
   ensureHistory(id);
   const hist=S.history[id];
-  const hasToday=!!S.todaySessions[id];
+  const hasToday=inRoom(id);
   let h=`<button class="btn sm ghost" data-act="tab" data-tab="athletes">${I("back")}Athletes</button>`;
   h+=`<div class="row mt"><div class="avatar" style="width:56px;height:56px;font-size:22px">${esc(initials(a.name))}</div><div class="grow"><h1 style="margin:0">${esc(a.name)}</h1><div class="sub">${esc(a.sport||"No sport")}${a.injury?" · "+esc(a.injury):""}</div></div></div>`;
-  h+=`<button class="btn primary block mt" data-act="openSess" data-id="${id}">${hasToday?"Open today's session":"Start today's session"}</button>`;
+  h+=`<button class="btn primary block mt" data-act="openSess" data-id="${id}" data-reopen="1">${hasToday?"Open today's session":"Start today's session"}</button>`;
   h+=`<div class="row mt"><button class="btn grow" data-act="showQR" data-id="${id}">${I("qr")}Code ${esc(a.code)}</button><button class="btn" data-act="editAth" data-id="${id}">${I("edit")}Edit</button></div>`;
   h+=`<div class="sec">History</div>`;
   if(!hist) h+=`<div class="empty small">Loading history…</div>`;
@@ -470,6 +480,9 @@ function vSession(){
   h+=`</div><button class="btn gold block big-add" data-act="openLib">${I("plus")}Add exercise</button>`;
   h+=`<label class="lbl" for="noteIn">Notes</label><textarea id="noteIn" rows="3" placeholder="ROM, swelling, how it felt…" data-in="note">${esc(e.doc.note||"")}</textarea>`;
   if(e.doc.pain!=null && e.doc.pain!=="") h+=`<div class="card mt row"><div class="grow small muted">Pain reported by athlete after session</div><div class="pill-n">${esc(e.doc.pain)}/10</div></div>`;
+  if(e.date===today()) h+= e.doc.checkedOut
+    ? `<div class="card mt row"><div class="grow small muted">Checked out for today</div><button class="btn sm" data-act="checkIn" data-id="${e.aid}">Back in the room</button></div>`
+    : `<button class="btn primary block mt" data-act="checkOut" data-id="${e.aid}" data-leave="1">${I("check",3)}Done for today</button>`;
   return h;
 }
 
@@ -518,7 +531,7 @@ function renderSheet(){
     h=head("Save as template")+`<div class="sheet-body"><label class="lbl" for="tplName">Template name</label><input id="tplName" placeholder="e.g. ACL week 3" value=""><div class="small muted mt">Saves the ${S.edit?S.edit.doc.items.length:0} exercises and doses on this list.</div></div><div class="sheet-foot"><button class="btn primary block" data-act="saveTpl">Save template</button></div>`;
   } else if(s.type==="pick"){
     const q=S.pickSearch.trim().toLowerCase();
-    const list=Object.values(S.athletes).filter(a=>!S.todaySessions[a.id] && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>(b.lastVisit||"").localeCompare(a.lastVisit||"")||a.name.localeCompare(b.name));
+    const list=Object.values(S.athletes).filter(a=>!inRoom(a.id) && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>(b.lastVisit||"").localeCompare(a.lastVisit||"")||a.name.localeCompare(b.name));
     h=head("Who's here?")+`<div style="padding:0 18px"><input type="search" placeholder="Search athletes" value="${esc(S.pickSearch)}" data-in="pickSearch"></div><div class="sheet-body mt" id="pickList">${pickListHTML(list)}</div><div class="sheet-foot"><button class="btn block" data-act="newAth">${I("plus")}New athlete</button></div>`;
   } else if(s.type==="athForm"){
     const a=s.id?S.athletes[s.id]:null;
@@ -610,11 +623,19 @@ function stWrite(body){ const st=S.student; st.board=body; rerender(); if(!st.re
 const A = {
   tab(el){ S.tab=el.dataset.tab; S.route={name:S.tab}; S.edit=null; render(); window.scrollTo(0,0); },
   openAth(el){ S.route={name:"athlete", id:el.dataset.id}; S.edit=null; render(); window.scrollTo(0,0); },
-  openSess(el){ openSession(el.dataset.id, el.dataset.date || today()); },
+  openSess(el){ const id=el.dataset.id; if(el.dataset.reopen && S.todaySessions[id] && S.todaySessions[id].checkedOut) setCheckedOut([id], false); openSession(id, el.dataset.date || today()); },
   back(){ const p=S.prev; S.edit=null; S.route = (p && p.name!=="session") ? p : {name:S.tab}; render(); window.scrollTo(0,0); },
   gotIt(el){ const code=el.dataset.code; const b=S.boards[code]; if(!b) return; const nb={...clone(b), status:"", statusAt:Date.now()}; S.boards[code]=nb; write("board/"+code, nb); render(); },
+  checkOut(el){ setCheckedOut([el.dataset.id], true); if(el.dataset.leave){ A.back(); } else render(); const a=S.athletes[el.dataset.id]; toast((a?firstName(a.name):"Athlete")+" is done for today"); },
+  checkIn(el){ setCheckedOut([el.dataset.id], false); render(); },
+  toggleOut(){ S.showOut=!S.showOut; render(); },
+  clearRoom(){
+    const ids=Object.keys(S.todaySessions).filter(inRoom); if(!ids.length) return;
+    S.confirmFn=()=>{ setCheckedOut(ids, true); closeSheet(); render(); toast("Room cleared. Everyone's history is saved."); };
+    openSheet({type:"confirm", title:"Clear the room?", msg:`This checks out all ${ids.length} athletes for today. Their sessions stay saved in their history, and you can bring anyone back in.`, yes:"Clear room"});
+  },
   openPick(){ S.pickSearch=""; openSheet({type:"pick"}); },
-  pickAth(el){ closeSheet(); openSession(el.dataset.id, today()); },
+  pickAth(el){ closeSheet(); const id=el.dataset.id; if(S.todaySessions[id] && S.todaySessions[id].checkedOut) setCheckedOut([id], false); openSession(id, today()); },
   newAth(){ openSheet({type:"athForm", id:"", from:S.sheet&&S.sheet.type}); setTimeout(()=>{ const f=$("fName"); if(f) f.focus(); },50); },
   editAth(el){ openSheet({type:"athForm", id:el.dataset.id}); },
   saveAth(el){
@@ -727,6 +748,19 @@ function refreshBoardsFor(name){
     if(d && (d.items||[]).some(i=>i.name.toLowerCase()===l)) pushBoard(aid, d);
   }
 }
+// Check athletes out of (or back into) today's room. History is never deleted.
+function setCheckedOut(ids, out){
+  const td=today();
+  ids.forEach(aid=>{
+    const s=S.todaySessions[aid]; if(!s) return;
+    const nd={...clone(s), checkedOut:out, checkedOutAt: out?Date.now():0}; delete nd.id;
+    S.todaySessions[aid]={...nd, id:s.id};
+    const e=S.edit; if(e && e.aid===aid && e.date===td){ e.doc.checkedOut=out; e.doc.checkedOutAt=nd.checkedOutAt; }
+    write(sessPath(aid,td), nd);
+    const a=S.athletes[aid], b=a&&S.boards[a.code];
+    if(out && b && b.date===td && b.status==="help"){ const nb={...clone(b), status:"", statusAt:Date.now()}; S.boards[a.code]=nb; write("board/"+a.code, nb); }
+  });
+}
 function curItem(){ return S.edit && S.sheet && S.edit.doc.items.find(i=>i.id===S.sheet.iid); }
 function addExercise(name, cat){
   const e=S.edit; if(!e) return;
@@ -736,7 +770,7 @@ function addExercise(name, cat){
 const INPUTS = {
   athSearch(el){ S.search=el.value; const l=$("athList"); if(l) l.innerHTML=athListHTML(); },
   libSearch(el){ S.libSearch=el.value; const l=$("libList"); if(l) l.innerHTML=libListHTML(); },
-  pickSearch(el){ S.pickSearch=el.value; const q=el.value.trim().toLowerCase(); const list=Object.values(S.athletes).filter(a=>!S.todaySessions[a.id] && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name)); const l=$("pickList"); if(l) l.innerHTML=pickListHTML(list); },
+  pickSearch(el){ S.pickSearch=el.value; const q=el.value.trim().toLowerCase(); const list=Object.values(S.athletes).filter(a=>!inRoom(a.id) && (!q||(a.name+" "+(a.sport||"")).toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name)); const l=$("pickList"); if(l) l.innerHTML=pickListHTML(list); },
   note(el){ if(!S.edit) return; S.edit.doc.note=el.value; clearTimeout(INPUTS._t); INPUTS._t=setTimeout(saveSession, 700); }
 };
 document.addEventListener("click", e=>{ if(e.target.closest("a[href]")) return; const el=e.target.closest("[data-act]"); if(!el) return; const f=A[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); } });
@@ -757,6 +791,10 @@ function onHash(){
   render();
 }
 window.addEventListener("hashchange", onHash);
+// If the app was left open overnight, start fresh on the new day.
+function checkNewDay(){ if(S.subDate && today()!==S.subDate && !isTyping()) location.reload(); else if(S.route.name==="student") rerender(); }
+setInterval(checkNewDay, 60000);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") checkNewDay(); });
 function waitBackend(){
   return new Promise(res=>{
     if(window.ATR) return res(window.ATR);
